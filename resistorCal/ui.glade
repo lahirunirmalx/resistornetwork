@@ -1,0 +1,968 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generated with glade 3.40.0 -->
+<!-- Modified UI for the resistor network calculator -->
+<interface>
+  <requires lib="gtk+" version="3.20"/>
+  <object class="GtkWindow" id="window1">
+    <property name="can-focus">False</property>
+    <property name="title" translatable="yes">Resistor Values Grid</property>
+    <property name="default-width">800</property>
+    <property name="default-height">600</property>
+    <property name="destroy-with-parent">True</property>
+    <child>
+      <object class="GtkBox" id="vbox_main">
+        <property name="visible">True</property>
+        <property name="can-focus">False</property>
+        <property name="orientation">vertical</property>
+        <child>
+          <!-- n-columns=10 n-rows=6 -->
+          <object class="GtkGrid" id="grid_resistors">
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="row-spacing">2</property>
+            <property name="column-spacing">2</property>
+            <child>
+              <object class="GtkCheckButton" id="check_1">
+                <property name="label" translatable="yes">1 Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">True</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">0</property>
+                <property name="top-attach">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_7_5">
+                <property name="label" translatable="yes">7.5 Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">1</property>
+                <property name="top-attach">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_10">
+                <property name="label" translatable="yes">10 Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">2</property>
+                <property name="top-attach">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_18">
+                <property name="label" translatable="yes">18 Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">3</property>
+                <property name="top-attach">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_22">
+                <property name="label" translatable="yes">22 Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">4</property>
+                <property name="top-attach">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_24">
+                <property name="label" translatable="yes">24 Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">5</property>
+                <property name="top-attach">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_39">
+                <property name="label" translatable="yes">39 Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">6</property>
+                <property name="top-attach">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_47">
+                <property name="label" translatable="yes">47 Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">7</property>
+                <property name="top-attach">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_68">
+                <property name="label" translatable="yes">68 Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">8</property>
+                <property name="top-attach">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_75">
+                <property name="label" translatable="yes">75 Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">9</property>
+                <property name="top-attach">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_100">
+                <property name="label" translatable="yes">100 Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">0</property>
+                <property name="top-attach">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_120">
+                <property name="label" translatable="yes">120 Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">1</property>
+                <property name="top-attach">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_130">
+                <property name="label" translatable="yes">130 Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">2</property>
+                <property name="top-attach">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_150">
+                <property name="label" translatable="yes">150 Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">3</property>
+                <property name="top-attach">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_200">
+                <property name="label" translatable="yes">200 Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">4</property>
+                <property name="top-attach">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_220">
+                <property name="label" translatable="yes">220 Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">5</property>
+                <property name="top-attach">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_330">
+                <property name="label" translatable="yes">330 Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">6</property>
+                <property name="top-attach">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_360">
+                <property name="label" translatable="yes">360 Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">7</property>
+                <property name="top-attach">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_470">
+                <property name="label" translatable="yes">470 Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">8</property>
+                <property name="top-attach">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_560">
+                <property name="label" translatable="yes">560 Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">9</property>
+                <property name="top-attach">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_820">
+                <property name="label" translatable="yes">820 Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">0</property>
+                <property name="top-attach">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_1K">
+                <property name="label" translatable="yes">1K Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">1</property>
+                <property name="top-attach">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_1_2K">
+                <property name="label" translatable="yes">1.2K Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">2</property>
+                <property name="top-attach">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_1_8K">
+                <property name="label" translatable="yes">1.8K Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">3</property>
+                <property name="top-attach">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_2_2K">
+                <property name="label" translatable="yes">2.2K Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">4</property>
+                <property name="top-attach">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_2_7K">
+                <property name="label" translatable="yes">2.7K Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">5</property>
+                <property name="top-attach">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_3K">
+                <property name="label" translatable="yes">3K Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">6</property>
+                <property name="top-attach">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_3_6K">
+                <property name="label" translatable="yes">3.6K Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">7</property>
+                <property name="top-attach">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_3_9K">
+                <property name="label" translatable="yes">3.9K Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">8</property>
+                <property name="top-attach">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_4_7K">
+                <property name="label" translatable="yes">4.7K Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">9</property>
+                <property name="top-attach">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_5_6K">
+                <property name="label" translatable="yes">5.6K Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">0</property>
+                <property name="top-attach">3</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_6_8K">
+                <property name="label" translatable="yes">6.8K Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">1</property>
+                <property name="top-attach">3</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_8_2K">
+                <property name="label" translatable="yes">8.2K Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">2</property>
+                <property name="top-attach">3</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_10K">
+                <property name="label" translatable="yes">10K Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">3</property>
+                <property name="top-attach">3</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_12K">
+                <property name="label" translatable="yes">12K Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">4</property>
+                <property name="top-attach">3</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_18K">
+                <property name="label" translatable="yes">18K Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">5</property>
+                <property name="top-attach">3</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_22K">
+                <property name="label" translatable="yes">22K Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">6</property>
+                <property name="top-attach">3</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_33K">
+                <property name="label" translatable="yes">33K Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">7</property>
+                <property name="top-attach">3</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_39K">
+                <property name="label" translatable="yes">39K Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">8</property>
+                <property name="top-attach">3</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_47K">
+                <property name="label" translatable="yes">47K Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">9</property>
+                <property name="top-attach">3</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_56K">
+                <property name="label" translatable="yes">56K Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">0</property>
+                <property name="top-attach">4</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_68K">
+                <property name="label" translatable="yes">68K Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">1</property>
+                <property name="top-attach">4</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_100K">
+                <property name="label" translatable="yes">100K Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">2</property>
+                <property name="top-attach">4</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_120K">
+                <property name="label" translatable="yes">120K Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">3</property>
+                <property name="top-attach">4</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_130K">
+                <property name="label" translatable="yes">130K Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">4</property>
+                <property name="top-attach">4</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_150K">
+                <property name="label" translatable="yes">150K Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">5</property>
+                <property name="top-attach">4</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_180K">
+                <property name="label" translatable="yes">180K Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">6</property>
+                <property name="top-attach">4</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_220K">
+                <property name="label" translatable="yes">220K Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">7</property>
+                <property name="top-attach">4</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_270K">
+                <property name="label" translatable="yes">270K Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">8</property>
+                <property name="top-attach">4</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_330K">
+                <property name="label" translatable="yes">330K Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">9</property>
+                <property name="top-attach">4</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_390K">
+                <property name="label" translatable="yes">390K Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">0</property>
+                <property name="top-attach">5</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_470K">
+                <property name="label" translatable="yes">470K Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">1</property>
+                <property name="top-attach">5</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_560K">
+                <property name="label" translatable="yes">560K Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">2</property>
+                <property name="top-attach">5</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_680K">
+                <property name="label" translatable="yes">680K Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">3</property>
+                <property name="top-attach">5</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_750K">
+                <property name="label" translatable="yes">750K Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">4</property>
+                <property name="top-attach">5</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_1M">
+                <property name="label" translatable="yes">1M Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">5</property>
+                <property name="top-attach">5</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_2_7M">
+                <property name="label" translatable="yes">2.7M Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">6</property>
+                <property name="top-attach">5</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_3M">
+                <property name="label" translatable="yes">3M Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">7</property>
+                <property name="top-attach">5</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_3_3M">
+                <property name="label" translatable="yes">3.3M Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">8</property>
+                <property name="top-attach">5</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="check_4_7M">
+                <property name="label" translatable="yes">4.7M Ω</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+                <property name="active">True</property>
+                <property name="draw-indicator">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">9</property>
+                <property name="top-attach">5</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <!-- n-columns=3 n-rows=2 -->
+          <object class="GtkGrid" id="grid_inputs">
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="row-spacing">5</property>
+            <property name="column-spacing">5</property>
+            <property name="row-homogeneous">True</property>
+            <property name="column-homogeneous">True</property>
+            <child>
+              <object class="GtkLabel" id="label_target">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="label" translatable="yes">Target Resistance (Ω):</property>
+              </object>
+              <packing>
+                <property name="left-attach">0</property>
+                <property name="top-attach">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="label_tol">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="label" translatable="yes">Tolerance (%):</property>
+              </object>
+              <packing>
+                <property name="left-attach">0</property>
+                <property name="top-attach">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkComboBoxText" id="combo_tolPerc">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <items>
+                  <item id="1" translatable="yes">1 %</item>
+                  <item id="2" translatable="yes">2 %</item>
+                  <item id="3" translatable="yes">3 %</item>
+                  <item id="4" translatable="yes">4 %</item>
+                  <item id="5" translatable="yes">5%</item>
+                  <item id="6" translatable="yes">6 %</item>
+                  <item id="10" translatable="yes">10 %</item>
+                </items>
+              </object>
+              <packing>
+                <property name="left-attach">1</property>
+                <property name="top-attach">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="button_calculate">
+                <property name="label" translatable="yes">Calculate</property>
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="receives-default">False</property>
+              </object>
+              <packing>
+                <property name="left-attach">2</property>
+                <property name="top-attach">0</property>
+                <property name="height">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkEntry" id="entry_target">
+                <property name="visible">True</property>
+                <property name="can-focus">True</property>
+              </object>
+              <packing>
+                <property name="left-attach">1</property>
+                <property name="top-attach">0</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkTextView" id="textview_output">
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="hscroll-policy">natural</property>
+            <property name="vscroll-policy">natural</property>
+            <property name="wrap-mode">word</property>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">2</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+  </object>
+</interface>

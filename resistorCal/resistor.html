@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Resistor Network Calculator</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 20px;
+    }
+    table {
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+    td {
+      border: 1px solid #ccc;
+      padding: 5px;
+      text-align: center;
+    }
+    h1, h2 {
+      margin-bottom: 10px;
+    }
+    #output {
+      white-space: pre-wrap;
+      background: #f8f8f8;
+      padding: 10px;
+      border: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+  <h1>Resistor Network Calculator</h1>
+  <h2>Select Resistor Values</h2>
+  <!-- Resistor Grid: 6 rows x 10 columns -->
+  <table id="resistorGrid">
+    <tr>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="1"> 1 Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="7.5"> 7.5 Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="10"> 10 Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="18"> 18 Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="22"> 22 Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="24"> 24 Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="39"> 39 Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="47"> 47 Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="68"> 68 Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="75"> 75 Ω</td>
+    </tr>
+    <tr>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="100"> 100 Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="120"> 120 Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="130"> 130 Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="150"> 150 Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="200"> 200 Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="220"> 220 Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="330"> 330 Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="360"> 360 Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="470"> 470 Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="560"> 560 Ω</td>
+    </tr>
+    <tr>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="820"> 820 Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="1000"> 1K Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="1200"> 1.2K Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="1800"> 1.8K Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="2200"> 2.2K Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="2700"> 2.7K Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="3000"> 3K Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="3600"> 3.6K Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="3900"> 3.9K Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="4700"> 4.7K Ω</td>
+    </tr>
+    <tr>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="5600"> 5.6K Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="6800"> 6.8K Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="8200"> 8.2K Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="10000"> 10K Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="12000"> 12K Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="18000"> 18K Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="22000"> 22K Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="33000"> 33K Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="39000"> 39K Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="47000"> 47K Ω</td>
+    </tr>
+    <tr>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="56000"> 56K Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="68000"> 68K Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="100000"> 100K Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="120000"> 120K Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="130000"> 130K Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="150000"> 150K Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="180000"> 180K Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="220000"> 220K Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="270000"> 270K Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="330000"> 330K Ω</td>
+    </tr>
+    <tr>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="390000"> 390K Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="470000"> 470K Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="560000"> 560K Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="680000"> 680K Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="750000"> 750K Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="1000000"> 1M Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="2700000"> 2.7M Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="3000000"> 3M Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="3300000"> 3.3M Ω</td>
+      <td><input type="checkbox" checked class="resistorCheckbox" value="4700000"> 4.7M Ω</td>
+    </tr>
+  </table>
+
+  <h2>Input Parameters</h2>
+  <label for="targetInput">Target Resistance (Ω):</label>
+  <input type="number" id="targetInput" placeholder="Enter target resistance"><br><br>
+  <label for="tolSelect">Tolerance (%):</label>
+  <select id="tolSelect">
+    <option value="1">1</option>
+    <option value="2">2</option>
+    <option value="3">3</option>
+    <option value="4">4</option>
+    <option value="5" selected>5</option>
+    <option value="6">6</option>
+    <option value="7">7</option>
+    <option value="8">8</option>
+    <option value="9">9</option>
+    <option value="10">10</option>
+  </select>
+  <br><br>
+  <button id="calculateButton">Calculate</button>
+
+  <h2>Results</h2>
+  <pre id="output"></pre>
+
+  <script>
+    document.getElementById("calculateButton").addEventListener("click", calculateNetworks);
+
+    function calculateNetworks() {
+      // Retrieve checked resistor values from the grid.
+      const checkboxes = document.querySelectorAll(".resistorCheckbox:checked");
+      const available = [];
+      checkboxes.forEach(chk => {
+        available.push(parseFloat(chk.value));
+      });
+
+      // Get the target resistance and tolerance.
+      const target = parseFloat(document.getElementById("targetInput").value);
+      const tolPerc = parseFloat(document.getElementById("tolSelect").value);
+      const tol = tolPerc / 100;
+
+      if (isNaN(target) || available.length === 0) {
+        document.getElementById("output").innerText = "Please enter a valid target and select at least one resistor.";
+        return;
+      }
+
+      const MAX_N = 5;
+      const MAX_NETWORKS = 10000;
+      // Create a 2D array: networks[n] will hold networks using exactly n resistors.
+      const networks = Array.from({ length: MAX_N + 1 }, () => []);
+
+      // For networks with 1 resistor, each available resistor becomes a network.
+      available.forEach(r => {
+        networks[1].push({ R: r, n: 1, expr: r.toFixed(2) });
+      });
+
+      // For networks using 2 to MAX_N resistors, combine smaller networks.
+      for (let n = 2; n <= MAX_N; n++) {
+        for (let i = 1; i < n; i++) {
+          const j = n - i;
+          networks[i].forEach(netA => {
+            networks[j].forEach(netB => {
+              if (networks[n].length < MAX_NETWORKS) {
+                // Series combination: R = A + B.
+                const R_series = netA.R + netB.R;
+                const expr_series = "(" + netA.expr + " + " + netB.expr + ")";
+                networks[n].push({ R: R_series, n: netA.n + netB.n, expr: expr_series });
+              }
+              if (netA.R > 0 && netB.R > 0 && networks[n].length < MAX_NETWORKS) {
+                // Parallel combination: R = 1 / (1/A + 1/B).
+                const R_parallel = 1.0 / ((1.0 / netA.R) + (1.0 / netB.R));
+                const expr_parallel = "(" + netA.expr + " || " + netB.expr + ")";
+                networks[n].push({ R: R_parallel, n: netA.n + netB.n, expr: expr_parallel });
+              }
+            });
+          });
+        }
+      }
+
+      // Search for networks within the tolerance.
+      const results = [];
+      for (let n = 1; n <= MAX_N; n++) {
+        networks[n].forEach(net => {
+          const relError = Math.abs(net.R - target) / target;
+          if (relError <= tol) {
+            results.push("Using " + net.n + " resistor" + (net.n > 1 ? "s" : "") +
+              ": " + net.expr + " = " + net.R.toFixed(2) +
+              " ohm (error " + (relError * 100).toFixed(2) + "%)");
+          }
+        });
+      }
+
+      // Display the results.
+      if (results.length === 0) {
+        document.getElementById("output").innerText = "No network found within the specified tolerance.";
+      } else {
+        document.getElementById("output").innerText = results.join("\n");
+      }
+    }
+  </script>
+</body>
+</html>
