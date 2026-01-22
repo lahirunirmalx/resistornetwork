@@ -22,6 +22,15 @@
 #define MAX_EXPR 256
 #define MAX_RESULTS 50    /* max results to display */
 #define TOP_N_CODES 5     /* show color codes for top N results */
+#define MAX_R2R_BITS 24   /* max bits for R-2R ladder */
+
+/* E24 series base values */
+static const double E24_BASE[] = {
+    1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4, 2.7, 3.0,
+    3.3, 3.6, 3.9, 4.3, 4.7, 5.1, 5.6, 6.2, 6.8, 7.5, 8.2, 9.1
+};
+#define E24_COUNT 24
+#define E24_DECADES 7   /* 1 to 1M */
 
 /* DATADIR is set by cmake at compile time */
 #ifndef DATADIR
@@ -329,6 +338,38 @@ static const char *get_smd_code(double ohms)
 
     snprintf(buf, sizeof(buf), "%d%d", sig, exp10);
     return buf;
+}
+
+/* ========================================================================
+ * FORMATTING HELPERS
+ * ======================================================================== */
+
+/*
+ * Format resistance value with appropriate suffix (Ω, KΩ, MΩ)
+ */
+static void format_resistance(double ohms, char *buf, size_t bufsize)
+{
+    if (ohms >= 1e6)
+        snprintf(buf, bufsize, "%.1fMΩ", ohms / 1e6);
+    else if (ohms >= 1e3)
+        snprintf(buf, bufsize, "%.1fKΩ", ohms / 1e3);
+    else
+        snprintf(buf, bufsize, "%.1fΩ", ohms);
+}
+
+/*
+ * Format LSB voltage with appropriate unit (V, mV, µV, nV)
+ */
+static void format_lsb(double volts, char *buf, size_t bufsize)
+{
+    if (volts >= 1.0)
+        snprintf(buf, bufsize, "%.3fV", volts);
+    else if (volts >= 0.001)
+        snprintf(buf, bufsize, "%.2fmV", volts * 1000);
+    else if (volts >= 0.000001)
+        snprintf(buf, bufsize, "%.2fµV", volts * 1e6);
+    else
+        snprintf(buf, bufsize, "%.2fnV", volts * 1e9);
 }
 
 /* ========================================================================
@@ -653,6 +694,262 @@ cleanup:
 }
 
 /* ========================================================================
+ * R-2R LADDER CALCULATOR
+ * ======================================================================== */
+
+/*
+ * Initialize the R value dropdown with E24 series across decades.
+ */
+static void init_r2r_dropdowns(void)
+{
+    GtkComboBoxText *combo_r, *combo_bits;
+    int d, i, bit;
+    char label[64];
+    char r_str[32], r2_str[32];
+    double r_val, multiplier;
+    int default_idx = 0;
+
+    combo_r = GTK_COMBO_BOX_TEXT(gtk_builder_get_object(builder, "combo_r_value"));
+    combo_bits = GTK_COMBO_BOX_TEXT(gtk_builder_get_object(builder, "combo_bits"));
+
+    if (!combo_r || !combo_bits)
+        return;
+
+    /* Populate R values: E24 series across all decades */
+    for (d = 0; d < E24_DECADES; d++) {
+        multiplier = pow(10, d);
+        for (i = 0; i < E24_COUNT; i++) {
+            r_val = E24_BASE[i] * multiplier;
+            format_resistance(r_val, r_str, sizeof(r_str));
+            format_resistance(r_val * 2, r2_str, sizeof(r2_str));
+            snprintf(label, sizeof(label), "%s → 2R = %s", r_str, r2_str);
+            gtk_combo_box_text_append(combo_r, NULL, label);
+            
+            /* Default to 10K (index where r_val == 10000) */
+            if (fabs(r_val - 10000) < 1)
+                default_idx = d * E24_COUNT + i;
+        }
+    }
+    gtk_combo_box_set_active(GTK_COMBO_BOX(combo_r), default_idx);
+
+    /* Populate bits: 2 to 24 */
+    for (bit = 2; bit <= MAX_R2R_BITS; bit++) {
+        snprintf(label, sizeof(label), "%d-bit", bit);
+        gtk_combo_box_text_append(combo_bits, NULL, label);
+    }
+    gtk_combo_box_set_active(GTK_COMBO_BOX(combo_bits), 6);  /* Default 8-bit */
+}
+
+/*
+ * Get the R value from the dropdown index.
+ */
+static double get_r_value_from_index(int idx)
+{
+    int decade = idx / E24_COUNT;
+    int base_idx = idx % E24_COUNT;
+    return E24_BASE[base_idx] * pow(10, decade);
+}
+
+/*
+ * R-2R Ladder generation callback.
+ */
+static void on_r2r_generate_clicked(GtkButton *button, gpointer user_data)
+{
+    GtkWidget *combo_r, *combo_bits, *entry_vref, *textview_output;
+    GtkTextBuffer *buffer;
+    GtkTextIter iter;
+    int r_idx, bit_idx, bits;
+    double R, R2, vref, lsb;
+    int r_count, r2_count, total;
+    const char *vref_text;
+    char line[512];
+    char r_str[32], r2_str[32], lsb_str[32];
+    int i, num_samples;
+    double max_val;
+
+    (void)button;
+    (void)user_data;
+
+    combo_r = GTK_WIDGET(gtk_builder_get_object(builder, "combo_r_value"));
+    combo_bits = GTK_WIDGET(gtk_builder_get_object(builder, "combo_bits"));
+    entry_vref = GTK_WIDGET(gtk_builder_get_object(builder, "entry_vref"));
+    textview_output = GTK_WIDGET(gtk_builder_get_object(builder, "textview_r2r_output"));
+
+    if (!combo_r || !combo_bits || !entry_vref || !textview_output)
+        return;
+
+    r_idx = gtk_combo_box_get_active(GTK_COMBO_BOX(combo_r));
+    bit_idx = gtk_combo_box_get_active(GTK_COMBO_BOX(combo_bits));
+    bits = bit_idx + 2;  /* bits = 2 to 24, index 0 = 2-bit */
+    R = get_r_value_from_index(r_idx);
+    R2 = R * 2;
+
+    vref_text = gtk_entry_get_text(GTK_ENTRY(entry_vref));
+    vref = atof(vref_text);
+    if (vref <= 0) vref = 5.0;
+
+    /* Calculate component counts */
+    r_count = bits - 1;    /* N-1 R resistors in horizontal chain */
+    r2_count = bits + 1;   /* N+1 2R resistors (N bit legs + termination) */
+    total = r_count + r2_count;
+
+    max_val = pow(2, bits);
+    lsb = vref / max_val;
+
+    format_resistance(R, r_str, sizeof(r_str));
+    format_resistance(R2, r2_str, sizeof(r2_str));
+    format_lsb(lsb, lsb_str, sizeof(lsb_str));
+
+    buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(textview_output));
+    create_color_tags(buffer);
+    gtk_text_buffer_set_text(buffer, "", -1);
+    gtk_text_buffer_get_end_iter(buffer, &iter);
+
+    /* Header */
+    snprintf(line, sizeof(line),
+        "\n══════════════════════════════════════════════════════════════\n"
+        "                    R-2R LADDER DAC (%d-bit)\n"
+        "══════════════════════════════════════════════════════════════\n\n",
+        bits);
+    gtk_text_buffer_insert(buffer, &iter, line, -1);
+
+    /* Component summary */
+    snprintf(line, sizeof(line),
+        "COMPONENTS\n"
+        "──────────────────────────────────────────────────────────────\n"
+        "  R value:   %s\n"
+        "  2R value:  %s\n"
+        "  R count:   %d resistors\n"
+        "  2R count:  %d resistors\n"
+        "  Total:     %d resistors\n\n",
+        r_str, r2_str, r_count, r2_count, total);
+    gtk_text_buffer_insert(buffer, &iter, line, -1);
+
+    /* Specifications */
+    snprintf(line, sizeof(line),
+        "SPECIFICATIONS\n"
+        "──────────────────────────────────────────────────────────────\n"
+        "  Vref:      %.2fV\n"
+        "  LSB step:  %s\n"
+        "  Levels:    %.0f (0 to %.0f)\n"
+        "  Max Vout:  %.6fV\n\n",
+        vref, lsb_str, max_val, max_val - 1, vref * (max_val - 1) / max_val);
+    gtk_text_buffer_insert(buffer, &iter, line, -1);
+
+    /* Color codes for R */
+    gtk_text_buffer_insert(buffer, &iter, "RESISTOR COLOR CODES\n", -1);
+    gtk_text_buffer_insert(buffer, &iter, "──────────────────────────────────────────────────────────────\n", -1);
+    snprintf(line, sizeof(line), "  R (%s):  ", r_str);
+    gtk_text_buffer_insert(buffer, &iter, line, -1);
+    insert_4band_visual(buffer, &iter, R);
+    snprintf(line, sizeof(line), " | SMD: %s\n", get_smd_code(R));
+    gtk_text_buffer_insert(buffer, &iter, line, -1);
+
+    snprintf(line, sizeof(line), "  2R (%s): ", r2_str);
+    gtk_text_buffer_insert(buffer, &iter, line, -1);
+    insert_4band_visual(buffer, &iter, R2);
+    snprintf(line, sizeof(line), " | SMD: %s\n\n", get_smd_code(R2));
+    gtk_text_buffer_insert(buffer, &iter, line, -1);
+
+    /* Voltage table - show representative samples */
+    gtk_text_buffer_insert(buffer, &iter, "SAMPLE OUTPUT VOLTAGES\n", -1);
+    gtk_text_buffer_insert(buffer, &iter, "──────────────────────────────────────────────────────────────\n", -1);
+
+    if (bits <= 12) {
+        gtk_text_buffer_insert(buffer, &iter, "  Binary           Dec      Vout\n", -1);
+    } else {
+        gtk_text_buffer_insert(buffer, &iter, "  Hex          Decimal         Vout\n", -1);
+    }
+    gtk_text_buffer_insert(buffer, &iter, "  ─────────────────────────────────\n", -1);
+
+    num_samples = (bits <= 4) ? (int)max_val : 16;
+    for (i = 0; i < num_samples; i++) {
+        int d;
+        double voltage;
+        char code_str[32];
+        
+        if (bits <= 4) {
+            d = i;
+        } else {
+            /* Evenly spaced samples */
+            d = (int)(i * (max_val - 1) / 15);
+        }
+        
+        voltage = vref * d / max_val;
+        
+        if (bits <= 12) {
+            /* Binary format for <= 12 bits */
+            int b;
+            char *p = code_str;
+            for (b = bits - 1; b >= 0; b--) {
+                *p++ = (d & (1 << b)) ? '1' : '0';
+            }
+            *p = '\0';
+            snprintf(line, sizeof(line), "  %-14s %5d    %.6fV\n", code_str, d, voltage);
+        } else {
+            /* Hex format for > 12 bits */
+            int hex_digits = (bits + 3) / 4;
+            snprintf(code_str, sizeof(code_str), "0x%0*X", hex_digits, d);
+            snprintf(line, sizeof(line), "  %-10s %10d    %.6fV\n", code_str, d, voltage);
+        }
+        gtk_text_buffer_insert(buffer, &iter, line, -1);
+    }
+
+    /* Ladder diagram (ASCII art) */
+    gtk_text_buffer_insert(buffer, &iter, "\nLADDER DIAGRAM\n", -1);
+    gtk_text_buffer_insert(buffer, &iter, "──────────────────────────────────────────────────────────────\n", -1);
+    gtk_text_buffer_insert(buffer, &iter, "\n", -1);
+
+    /* Draw compact ladder */
+    gtk_text_buffer_insert(buffer, &iter, "  Vref ───┬───[2R]───GND (termination)\n", -1);
+    gtk_text_buffer_insert(buffer, &iter, "          │\n", -1);
+
+    /* Show first few bits, middle ellipsis, last few bits */
+    if (bits <= 6) {
+        for (i = bits - 1; i >= 0; i--) {
+            snprintf(line, sizeof(line), "         [R]───┬───[2R]───B%d\n", i);
+            gtk_text_buffer_insert(buffer, &iter, line, -1);
+            if (i > 0)
+                gtk_text_buffer_insert(buffer, &iter, "               │\n", -1);
+        }
+    } else {
+        /* Show top 2 bits */
+        for (i = bits - 1; i >= bits - 2; i--) {
+            snprintf(line, sizeof(line), "         [R]───┬───[2R]───B%d (MSB%s)\n",
+                     i, i == bits - 1 ? "" : "-1");
+            gtk_text_buffer_insert(buffer, &iter, line, -1);
+            gtk_text_buffer_insert(buffer, &iter, "               │\n", -1);
+        }
+        snprintf(line, sizeof(line), "              ...  (%d more stages)\n", bits - 4);
+        gtk_text_buffer_insert(buffer, &iter, line, -1);
+        gtk_text_buffer_insert(buffer, &iter, "               │\n", -1);
+        /* Show bottom 2 bits */
+        for (i = 1; i >= 0; i--) {
+            snprintf(line, sizeof(line), "         [R]───┬───[2R]───B%d%s\n",
+                     i, i == 0 ? " (LSB)" : "");
+            gtk_text_buffer_insert(buffer, &iter, line, -1);
+            if (i > 0)
+                gtk_text_buffer_insert(buffer, &iter, "               │\n", -1);
+        }
+    }
+
+    gtk_text_buffer_insert(buffer, &iter, "               │\n", -1);
+    gtk_text_buffer_insert(buffer, &iter, "              Vout\n\n", -1);
+
+    /* How it works */
+    gtk_text_buffer_insert(buffer, &iter, "HOW R-2R LADDER WORKS\n", -1);
+    gtk_text_buffer_insert(buffer, &iter, "──────────────────────────────────────────────────────────────\n", -1);
+    gtk_text_buffer_insert(buffer, &iter,
+        "  Each bit input (B0-Bn) connects to either Vref or GND.\n"
+        "  The ladder network creates a binary-weighted voltage divider:\n"
+        "    • MSB (Bn) contributes Vref/2 when high\n"
+        "    • Next bit contributes Vref/4\n"
+        "    • Each successive bit contributes half the previous\n"
+        "    • LSB (B0) contributes Vref/(2^N)\n\n"
+        "  Formula: Vout = Vref × (Digital_Value / 2^N)\n\n", -1);
+}
+
+/* ========================================================================
  * UI LOADING
  * ======================================================================== */
 
@@ -741,7 +1038,7 @@ static gboolean load_ui(GtkBuilder *bldr, const char *argv0)
 
 int main(int argc, char *argv[])
 {
-    GtkWidget *window, *btn;
+    GtkWidget *window, *btn, *btn_r2r;
 
     gtk_init(&argc, &argv);
 
@@ -762,9 +1059,16 @@ int main(int argc, char *argv[])
     g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
     gtk_builder_connect_signals(builder, NULL);
 
+    /* Network calculator button */
     btn = GTK_WIDGET(gtk_builder_get_object(builder, "button_calculate"));
     if (btn)
         g_signal_connect(btn, "clicked", G_CALLBACK(on_calculate_clicked), NULL);
+
+    /* R-2R Ladder: initialize dropdowns and connect button */
+    init_r2r_dropdowns();
+    btn_r2r = GTK_WIDGET(gtk_builder_get_object(builder, "button_r2r_generate"));
+    if (btn_r2r)
+        g_signal_connect(btn_r2r, "clicked", G_CALLBACK(on_r2r_generate_clicked), NULL);
 
     gtk_widget_show_all(window);
     gtk_main();
