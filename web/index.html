@@ -629,14 +629,7 @@
             </div>
             <div class="input-group" style="max-width: 100px;">
               <label>Bits</label>
-              <select id="bitsSelect">
-                <option value="2">2-bit</option>
-                <option value="3">3-bit</option>
-                <option value="4" selected>4-bit</option>
-                <option value="5">5-bit</option>
-                <option value="6">6-bit</option>
-                <option value="8">8-bit</option>
-              </select>
+              <select id="bitsSelect"></select>
             </div>
           </div>
           <div class="input-row">
@@ -723,8 +716,12 @@
       1e6, 2.2e6, 3.3e6, 4.7e6
     ];
     
-    // Common R values for R-2R ladders (user can use any, 2R is calculated)
-    const R2R_VALUES = [10, 100, 1e3, 2.2e3, 4.7e3, 10e3, 22e3, 47e3, 100e3];
+    // E24 series R values for R-2R ladders across all decades
+    const R2R_VALUES = [];
+    const E24_BASE = [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4, 2.7, 3.0, 3.3, 3.6, 3.9, 4.3, 4.7, 5.1, 5.6, 6.2, 6.8, 7.5, 8.2, 9.1];
+    for (let mult = 1; mult <= 1e6; mult *= 10) {
+      E24_BASE.forEach(b => R2R_VALUES.push(Math.round(b * mult * 100) / 100));
+    }
     
     const E12 = [1.0, 1.2, 1.5, 1.8, 2.2, 2.7, 3.3, 3.9, 4.7, 5.6, 6.8, 8.2];
     const E24 = [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4, 2.7, 3.0, 3.3, 3.6, 3.9, 4.3, 4.7, 5.1, 5.6, 6.2, 6.8, 7.5, 8.2, 9.1];
@@ -783,6 +780,13 @@
     
     function renderBands(colors) {
       return colors.map(c => `<div class="band" style="background:${c}"></div>`).join('');
+    }
+    
+    function formatLSB(volts) {
+      if (volts >= 1) return volts.toFixed(3) + 'V';
+      if (volts >= 0.001) return (volts * 1000).toFixed(2) + 'mV';
+      if (volts >= 0.000001) return (volts * 1e6).toFixed(2) + 'µV';
+      return (volts * 1e9).toFixed(2) + 'nV';
     }
     
     // ===================== Network Calculator =====================
@@ -901,10 +905,19 @@
     // ===================== R-2R Ladder Calculator =====================
     
     function buildR2RSelect() {
+      // R value dropdown
       const sel = document.getElementById('rValueSelect');
       sel.innerHTML = R2R_VALUES.map(r => `<option value="${r}">${fmt(r)}Ω → 2R = ${fmt(r*2)}Ω</option>`).join('');
-      // Default to 10K
-      sel.value = '10000';
+      sel.value = '10000';  // Default to 10K
+      
+      // Bits dropdown (2-24)
+      const bitSel = document.getElementById('bitsSelect');
+      let bitsHtml = '';
+      for (let b = 2; b <= 24; b++) {
+        const selected = b === 8 ? ' selected' : '';
+        bitsHtml += `<option value="${b}"${selected}>${b}-bit</option>`;
+      }
+      bitSel.innerHTML = bitsHtml;
     }
     
     function calculateR2R() {
@@ -938,7 +951,7 @@
           <div class="ladder-stat-label">Total Resistors</div>
         </div>
         <div class="ladder-stat">
-          <div class="ladder-stat-value">${(vref / Math.pow(2, bits) * 1000).toFixed(2)}mV</div>
+          <div class="ladder-stat-value">${formatLSB(vref / Math.pow(2, bits))}</div>
           <div class="ladder-stat-label">LSB Step</div>
         </div>
       `;
@@ -1008,14 +1021,24 @@
         </div>
       `;
       
-      // Voltage table (sample values)
+      // Voltage table (sample values - show 16 representative samples)
       const maxVal = Math.pow(2, bits);
-      const step = bits <= 4 ? 1 : Math.pow(2, bits - 4); // Show 16 rows max
+      const samples = [];
+      if (bits <= 4) {
+        // Show all values for small bit counts
+        for (let i = 0; i < maxVal; i++) samples.push(i);
+      } else {
+        // Show 16 evenly spaced samples for larger bit counts
+        for (let i = 0; i < 16; i++) {
+          samples.push(Math.floor(i * (maxVal - 1) / 15));
+        }
+      }
+      
       let tableHtml = `
         <table class="voltage-table">
           <thead>
             <tr>
-              <th>Binary</th>
+              <th>${bits <= 12 ? 'Binary' : 'Hex'}</th>
               <th>Dec</th>
               <th>Vout</th>
             </tr>
@@ -1023,16 +1046,16 @@
           <tbody>
       `;
       
-      for (let d = 0; d < maxVal; d += step) {
-        const binary = d.toString(2).padStart(bits, '0');
+      for (const d of samples) {
+        const code = bits <= 12 ? d.toString(2).padStart(bits, '0') : '0x' + d.toString(16).toUpperCase().padStart(Math.ceil(bits/4), '0');
         const voltage = (vref * d / maxVal);
         const pct = (d / (maxVal - 1)) * 100;
         tableHtml += `
           <tr>
-            <td class="binary">${binary}</td>
-            <td>${d}</td>
+            <td class="binary">${code}</td>
+            <td>${d.toLocaleString()}</td>
             <td>
-              <span class="voltage">${voltage.toFixed(3)}V</span>
+              <span class="voltage">${voltage.toFixed(bits > 16 ? 6 : 3)}V</span>
               <div class="voltage-bar"><div class="voltage-bar-fill" style="width:${pct}%"></div></div>
             </td>
           </tr>
