@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#1e3a5f">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="description" content="Find resistor combinations for target resistance with color codes">
+  <meta name="description" content="Resistor network calculator with R-2R ladder DAC designer">
   
   <title>Resistor Calculator</title>
   
@@ -56,7 +56,7 @@
     
     /* Header */
     header {
-      padding: 16px 20px;
+      padding: 12px 20px;
       display: flex;
       align-items: center;
       gap: 12px;
@@ -64,28 +64,58 @@
     }
     
     header svg {
-      width: 40px;
-      height: 40px;
+      width: 36px;
+      height: 36px;
       filter: drop-shadow(0 0 8px var(--accent-glow));
     }
     
     header h1 {
-      font-size: 1.25rem;
+      font-size: 1.1rem;
       font-weight: 600;
       letter-spacing: -0.02em;
     }
     
-    /* Main scrollable content */
-    main {
+    /* Tab Navigation */
+    .tabs {
+      display: flex;
+      padding: 0 16px;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    
+    .tab {
+      flex: 1;
+      padding: 12px 8px;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--text-dim);
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+    
+    .tab:active { opacity: 0.7; }
+    
+    /* Views */
+    .view {
+      display: none;
       flex: 1;
       overflow-y: auto;
       overflow-x: hidden;
-      padding: 0 16px 16px;
+      padding: 12px 16px 16px;
       -webkit-overflow-scrolling: touch;
     }
     
-    main::-webkit-scrollbar { display: none; }
-    main { scrollbar-width: none; }
+    .view::-webkit-scrollbar { display: none; }
+    .view { scrollbar-width: none; }
+    .view.active { display: block; }
     
     /* Collapsible sections */
     .panel {
@@ -241,12 +271,12 @@
     
     /* Results */
     .results-area {
-      min-height: 120px;
+      min-height: 100px;
     }
     
     .no-results {
       text-align: center;
-      padding: 32px 16px;
+      padding: 24px 16px;
       color: var(--text-dim);
       font-size: 0.85rem;
     }
@@ -308,7 +338,7 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      padding: 8px 0;
+      padding: 6px 0;
     }
     
     .part-value {
@@ -356,6 +386,96 @@
       height: 12px;
       border-radius: 3px;
       border: 1px solid rgba(255,255,255,0.15);
+    }
+    
+    /* R-2R Ladder styles */
+    .ladder-diagram {
+      background: var(--surface-alt);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      overflow-x: auto;
+    }
+    
+    .ladder-svg {
+      display: block;
+      margin: 0 auto;
+      max-width: 100%;
+    }
+    
+    .ladder-info {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    
+    .ladder-stat {
+      background: var(--surface-alt);
+      border-radius: 10px;
+      padding: 12px;
+      text-align: center;
+    }
+    
+    .ladder-stat-value {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    
+    .ladder-stat-label {
+      font-size: 0.65rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+    
+    .voltage-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.75rem;
+    }
+    
+    .voltage-table th {
+      background: var(--surface-alt);
+      padding: 10px 8px;
+      text-align: left;
+      font-weight: 600;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      font-size: 0.65rem;
+    }
+    
+    .voltage-table td {
+      padding: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .voltage-table tr:last-child td {
+      border-bottom: none;
+    }
+    
+    .voltage-table .binary {
+      font-family: 'SF Mono', monospace;
+      color: var(--accent);
+    }
+    
+    .voltage-table .voltage {
+      font-weight: 600;
+    }
+    
+    .voltage-bar {
+      height: 6px;
+      background: var(--surface-alt);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+    
+    .voltage-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--success));
+      border-radius: 3px;
     }
     
     /* Install banner */
@@ -430,8 +550,14 @@
       <h1>Resistor Calculator</h1>
     </header>
     
-    <main>
-      <!-- Resistor Selection -->
+    <!-- Tab Navigation -->
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('network')">Network</button>
+      <button class="tab" onclick="switchTab('r2r')">R-2R Ladder</button>
+    </div>
+    
+    <!-- Network Calculator View -->
+    <div class="view active" id="networkView">
       <div class="panel" id="resistorPanel">
         <div class="panel-header" onclick="togglePanel('resistorPanel')">
           <span class="panel-title">Available Resistors</span>
@@ -448,7 +574,6 @@
         </div>
       </div>
       
-      <!-- Calculate Section -->
       <div class="panel">
         <div class="panel-body" style="padding-top: 16px;">
           <div class="input-row">
@@ -470,7 +595,6 @@
         </div>
       </div>
       
-      <!-- Results -->
       <div class="panel">
         <div class="panel-header" onclick="togglePanel('resultsPanel')" id="resultsPanel">
           <span class="panel-title">Results</span>
@@ -483,7 +607,6 @@
         </div>
       </div>
       
-      <!-- Legend -->
       <div class="panel collapsed" id="legendPanel">
         <div class="panel-header" onclick="togglePanel('legendPanel')">
           <span class="panel-title">Color Reference</span>
@@ -493,7 +616,86 @@
           <div class="legend-row" id="legend"></div>
         </div>
       </div>
-    </main>
+    </div>
+    
+    <!-- R-2R Ladder View -->
+    <div class="view" id="r2rView">
+      <div class="panel">
+        <div class="panel-body" style="padding-top: 16px;">
+          <div class="input-row">
+            <div class="input-group">
+              <label>R Value (Ω)</label>
+              <select id="rValueSelect"></select>
+            </div>
+            <div class="input-group" style="max-width: 100px;">
+              <label>Bits</label>
+              <select id="bitsSelect">
+                <option value="2">2-bit</option>
+                <option value="3">3-bit</option>
+                <option value="4" selected>4-bit</option>
+                <option value="5">5-bit</option>
+                <option value="6">6-bit</option>
+                <option value="8">8-bit</option>
+              </select>
+            </div>
+          </div>
+          <div class="input-row">
+            <div class="input-group">
+              <label>Vref (V)</label>
+              <input type="number" id="vrefInput" value="5" step="0.1" inputmode="decimal">
+            </div>
+          </div>
+          <button class="calc-btn" onclick="calculateR2R()">Generate Ladder</button>
+        </div>
+      </div>
+      
+      <div class="panel" id="ladderResultPanel" style="display:none;">
+        <div class="panel-header">
+          <span class="panel-title">R-2R Ladder DAC</span>
+        </div>
+        <div class="panel-body">
+          <div class="ladder-info" id="ladderInfo"></div>
+          <div class="ladder-diagram" id="ladderDiagram"></div>
+        </div>
+      </div>
+      
+      <div class="panel" id="ladderCodesPanel" style="display:none;">
+        <div class="panel-header" onclick="togglePanel('ladderCodesPanel')">
+          <span class="panel-title">Resistor Codes</span>
+          <span class="panel-toggle">▼</span>
+        </div>
+        <div class="panel-body" id="ladderCodes"></div>
+      </div>
+      
+      <div class="panel" id="voltageTablePanel" style="display:none;">
+        <div class="panel-header" onclick="togglePanel('voltageTablePanel')">
+          <span class="panel-title">Output Voltages</span>
+          <span class="panel-toggle">▼</span>
+        </div>
+        <div class="panel-body">
+          <div id="voltageTable"></div>
+        </div>
+      </div>
+      
+      <div class="panel collapsed">
+        <div class="panel-header" onclick="togglePanel('r2rInfoPanel')" id="r2rInfoPanel">
+          <span class="panel-title">How R-2R Works</span>
+          <span class="panel-toggle">▼</span>
+        </div>
+        <div class="panel-body">
+          <p style="font-size:0.8rem;color:var(--text-dim);line-height:1.6;">
+            The R-2R ladder is a simple, accurate DAC design using only two resistor values: R and 2R. 
+            Each bit contributes half the voltage of the previous bit, creating a binary-weighted output.
+            <br><br>
+            <strong style="color:var(--text)">Components needed:</strong><br>
+            • <span style="color:var(--accent)">R resistors:</span> Used in the horizontal ladder rungs<br>
+            • <span style="color:var(--success)">2R resistors:</span> Used for bit inputs and termination<br>
+            <br>
+            The output voltage = Vref × (digital value) / 2<sup>n</sup>
+          </p>
+        </div>
+      </div>
+    </div>
   </div>
   
   <div class="install-banner" id="installBanner">
@@ -510,6 +712,7 @@
   </div>
 
   <script>
+    // Common resistor values
     const RESISTORS = [
       1, 1.2, 1.5, 1.8, 2.2, 2.7, 3.3, 3.9, 4.7, 5.6, 6.8, 8.2,
       10, 12, 15, 18, 22, 27, 33, 39, 47, 56, 68, 82,
@@ -520,6 +723,9 @@
       1e6, 2.2e6, 3.3e6, 4.7e6
     ];
     
+    // Common R values for R-2R ladders (user can use any, 2R is calculated)
+    const R2R_VALUES = [10, 100, 1e3, 2.2e3, 4.7e3, 10e3, 22e3, 47e3, 100e3];
+    
     const E12 = [1.0, 1.2, 1.5, 1.8, 2.2, 2.7, 3.3, 3.9, 4.7, 5.6, 6.8, 8.2];
     const E24 = [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4, 2.7, 3.0, 3.3, 3.6, 3.9, 4.3, 4.7, 5.1, 5.6, 6.2, 6.8, 7.5, 8.2, 9.1];
     
@@ -527,6 +733,8 @@
     const NAMES = ["Black", "Brown", "Red", "Orange", "Yellow", "Green", "Blue", "Violet", "Grey", "White"];
     
     let selected = new Set(RESISTORS);
+    
+    // ===================== Utility Functions =====================
     
     function fmt(v) {
       if (v >= 1e6) return (v/1e6).toFixed(v%1e6 ? 1 : 0) + 'M';
@@ -537,6 +745,47 @@
     function togglePanel(id) {
       document.getElementById(id).classList.toggle('collapsed');
     }
+    
+    function switchTab(tab) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      
+      if (tab === 'network') {
+        document.querySelector('.tab:first-child').classList.add('active');
+        document.getElementById('networkView').classList.add('active');
+      } else {
+        document.querySelector('.tab:last-child').classList.add('active');
+        document.getElementById('r2rView').classList.add('active');
+      }
+    }
+    
+    function band4(ohms) {
+      if (ohms <= 0) return [];
+      let e = Math.floor(Math.log10(ohms)) - 1;
+      if (e < 0) e = 0; if (e > 9) e = 9;
+      let s = Math.round(ohms / Math.pow(10, e));
+      if (s >= 100) { s = Math.floor(s/10); e++; }
+      if (s < 10) { s *= 10; e--; }
+      if (e < 0) e = 0; if (e > 9) e = 9;
+      return [COLORS[Math.floor(s/10)], COLORS[s%10], COLORS[e], '#FFD700'];
+    }
+    
+    function smd(ohms) {
+      if (ohms <= 0) return "—";
+      if (ohms < 10) return Math.floor(ohms) + 'R' + (Math.round((ohms - Math.floor(ohms)) * 10) % 10);
+      let e = Math.floor(Math.log10(ohms)) - 1;
+      if (e < 0) e = 0;
+      let s = Math.round(ohms / Math.pow(10, e));
+      if (s >= 100) { s = Math.floor(s/10); e++; }
+      if (s < 10) { s *= 10; e--; }
+      return `${s}${Math.max(0, e)}`;
+    }
+    
+    function renderBands(colors) {
+      return colors.map(c => `<div class="band" style="background:${c}"></div>`).join('');
+    }
+    
+    // ===================== Network Calculator =====================
     
     function buildChips() {
       const g = document.getElementById('chipGrid');
@@ -563,28 +812,6 @@
       selected.clear();
       for (let m = 1; m <= 1e6; m *= 10) E24.forEach(b => { const v = Math.round(b*m*10)/10; if (RESISTORS.includes(v)) selected.add(v); });
       buildChips();
-    }
-    
-    function band4(ohms) {
-      if (ohms <= 0) return [];
-      let e = Math.floor(Math.log10(ohms)) - 1;
-      if (e < 0) e = 0; if (e > 9) e = 9;
-      let s = Math.round(ohms / Math.pow(10, e));
-      if (s >= 100) { s = Math.floor(s/10); e++; }
-      if (s < 10) { s *= 10; e--; }
-      if (e < 0) e = 0; if (e > 9) e = 9;
-      return [COLORS[Math.floor(s/10)], COLORS[s%10], COLORS[e], '#FFD700'];
-    }
-    
-    function smd(ohms) {
-      if (ohms <= 0) return "—";
-      if (ohms < 10) return Math.floor(ohms) + 'R' + (Math.round((ohms - Math.floor(ohms)) * 10) % 10);
-      let e = Math.floor(Math.log10(ohms)) - 1;
-      if (e < 0) e = 0;
-      let s = Math.round(ohms / Math.pow(10, e));
-      if (s >= 100) { s = Math.floor(s/10); e++; }
-      if (s < 10) { s *= 10; e--; }
-      return `${s}${Math.max(0, e)}`;
     }
     
     function calculate() {
@@ -649,7 +876,7 @@
             uniq(r.parts).map(p => `
               <div class="part-row">
                 <span class="part-value">${fmt(p)}Ω</span>
-                <div class="bands">${band4(p).map(c => `<div class="band" style="background:${c}"></div>`).join('')}</div>
+                <div class="bands">${renderBands(band4(p))}</div>
                 <span class="smd-label">${smd(p)}</span>
               </div>
             `).join('') + '</div>';
@@ -670,6 +897,156 @@
         '<div class="legend-item"><div class="legend-dot" style="background:#FFD700"></div>Gold=5%</div>' +
         '<div class="legend-item"><div class="legend-dot" style="background:#C0C0C0"></div>Silver=10%</div>';
     }
+    
+    // ===================== R-2R Ladder Calculator =====================
+    
+    function buildR2RSelect() {
+      const sel = document.getElementById('rValueSelect');
+      sel.innerHTML = R2R_VALUES.map(r => `<option value="${r}">${fmt(r)}Ω → 2R = ${fmt(r*2)}Ω</option>`).join('');
+      // Default to 10K
+      sel.value = '10000';
+    }
+    
+    function calculateR2R() {
+      const R = parseFloat(document.getElementById('rValueSelect').value);
+      const bits = parseInt(document.getElementById('bitsSelect').value);
+      const vref = parseFloat(document.getElementById('vrefInput').value) || 5;
+      const R2 = R * 2;
+      
+      // Show result panels
+      document.getElementById('ladderResultPanel').style.display = 'block';
+      document.getElementById('ladderCodesPanel').style.display = 'block';
+      document.getElementById('voltageTablePanel').style.display = 'block';
+      
+      // Calculate component count
+      const rCount = bits - 1;  // R resistors in horizontal rungs
+      const r2Count = bits + 1; // 2R resistors (one per bit + termination)
+      const totalCount = rCount + r2Count;
+      
+      // Ladder info
+      document.getElementById('ladderInfo').innerHTML = `
+        <div class="ladder-stat">
+          <div class="ladder-stat-value">${rCount}</div>
+          <div class="ladder-stat-label">R (${fmt(R)}Ω)</div>
+        </div>
+        <div class="ladder-stat">
+          <div class="ladder-stat-value">${r2Count}</div>
+          <div class="ladder-stat-label">2R (${fmt(R2)}Ω)</div>
+        </div>
+        <div class="ladder-stat">
+          <div class="ladder-stat-value">${totalCount}</div>
+          <div class="ladder-stat-label">Total Resistors</div>
+        </div>
+        <div class="ladder-stat">
+          <div class="ladder-stat-value">${(vref / Math.pow(2, bits) * 1000).toFixed(2)}mV</div>
+          <div class="ladder-stat-label">LSB Step</div>
+        </div>
+      `;
+      
+      // Generate SVG ladder diagram
+      const svgWidth = Math.max(280, bits * 50 + 80);
+      const svgHeight = 120;
+      let svg = `<svg class="ladder-svg" viewBox="0 0 ${svgWidth} ${svgHeight}" width="${svgWidth}" height="${svgHeight}">`;
+      
+      // Draw ladder
+      const startX = 30;
+      const bitWidth = 50;
+      const topY = 30;
+      const bottomY = 90;
+      
+      // Horizontal lines
+      svg += `<line x1="${startX}" y1="${topY}" x2="${startX + bits * bitWidth}" y2="${topY}" stroke="#38bdf8" stroke-width="2"/>`;
+      
+      // Ground termination 2R
+      svg += `<rect x="${startX - 20}" y="${topY - 8}" width="16" height="16" fill="none" stroke="#4ade80" stroke-width="2"/>`;
+      svg += `<text x="${startX - 12}" y="${topY + 20}" fill="#94a3b8" font-size="8" text-anchor="middle">2R</text>`;
+      svg += `<line x1="${startX - 4}" y1="${topY}" x2="${startX}" y2="${topY}" stroke="#38bdf8" stroke-width="2"/>`;
+      svg += `<text x="${startX - 20}" y="${topY - 12}" fill="#94a3b8" font-size="8" text-anchor="middle">GND</text>`;
+      
+      for (let i = 0; i < bits; i++) {
+        const x = startX + i * bitWidth;
+        const nextX = x + bitWidth;
+        
+        // R resistor (horizontal, except last)
+        if (i < bits - 1) {
+          svg += `<rect x="${x + 15}" y="${topY - 6}" width="${bitWidth - 30}" height="12" fill="none" stroke="#38bdf8" stroke-width="2"/>`;
+          svg += `<text x="${x + bitWidth/2}" y="${topY - 12}" fill="#94a3b8" font-size="8" text-anchor="middle">R</text>`;
+        }
+        
+        // 2R resistor (vertical to bit input)
+        svg += `<line x1="${nextX}" y1="${topY}" x2="${nextX}" y2="${topY + 15}" stroke="#4ade80" stroke-width="2"/>`;
+        svg += `<rect x="${nextX - 6}" y="${topY + 15}" width="12" height="${bottomY - topY - 30}" fill="none" stroke="#4ade80" stroke-width="2"/>`;
+        svg += `<text x="${nextX + 12}" y="${topY + 35}" fill="#4ade80" font-size="8">2R</text>`;
+        svg += `<line x1="${nextX}" y1="${bottomY - 15}" x2="${nextX}" y2="${bottomY}" stroke="#4ade80" stroke-width="2"/>`;
+        
+        // Bit label
+        svg += `<text x="${nextX}" y="${bottomY + 14}" fill="#fbbf24" font-size="10" text-anchor="middle" font-weight="600">B${bits - 1 - i}</text>`;
+      }
+      
+      // Output arrow
+      const outX = startX + bits * bitWidth;
+      svg += `<line x1="${outX}" y1="${topY}" x2="${outX + 25}" y2="${topY}" stroke="#38bdf8" stroke-width="2"/>`;
+      svg += `<polygon points="${outX + 25},${topY - 5} ${outX + 35},${topY} ${outX + 25},${topY + 5}" fill="#38bdf8"/>`;
+      svg += `<text x="${outX + 38}" y="${topY + 4}" fill="#38bdf8" font-size="10" font-weight="600">Vout</text>`;
+      
+      svg += '</svg>';
+      document.getElementById('ladderDiagram').innerHTML = svg;
+      
+      // Color codes
+      document.getElementById('ladderCodes').innerHTML = `
+        <div class="part-row">
+          <span class="part-value" style="color:var(--accent)">${fmt(R)}Ω</span>
+          <div class="bands">${renderBands(band4(R))}</div>
+          <span class="smd-label">${smd(R)}</span>
+          <span style="color:var(--text-dim);font-size:0.7rem;margin-left:auto">×${rCount}</span>
+        </div>
+        <div class="part-row">
+          <span class="part-value" style="color:var(--success)">${fmt(R2)}Ω</span>
+          <div class="bands">${renderBands(band4(R2))}</div>
+          <span class="smd-label">${smd(R2)}</span>
+          <span style="color:var(--text-dim);font-size:0.7rem;margin-left:auto">×${r2Count}</span>
+        </div>
+      `;
+      
+      // Voltage table (sample values)
+      const maxVal = Math.pow(2, bits);
+      const step = bits <= 4 ? 1 : Math.pow(2, bits - 4); // Show 16 rows max
+      let tableHtml = `
+        <table class="voltage-table">
+          <thead>
+            <tr>
+              <th>Binary</th>
+              <th>Dec</th>
+              <th>Vout</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+      
+      for (let d = 0; d < maxVal; d += step) {
+        const binary = d.toString(2).padStart(bits, '0');
+        const voltage = (vref * d / maxVal);
+        const pct = (d / (maxVal - 1)) * 100;
+        tableHtml += `
+          <tr>
+            <td class="binary">${binary}</td>
+            <td>${d}</td>
+            <td>
+              <span class="voltage">${voltage.toFixed(3)}V</span>
+              <div class="voltage-bar"><div class="voltage-bar-fill" style="width:${pct}%"></div></div>
+            </td>
+          </tr>
+        `;
+      }
+      
+      tableHtml += '</tbody></table>';
+      if (step > 1) {
+        tableHtml += `<div style="text-align:center;color:var(--text-dim);font-size:0.7rem;margin-top:8px">Showing every ${step} values</div>`;
+      }
+      document.getElementById('voltageTable').innerHTML = tableHtml;
+    }
+    
+    // ===================== PWA Install =====================
     
     let deferredPrompt;
     window.addEventListener('beforeinstallprompt', e => {
@@ -692,8 +1069,11 @@
     
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
     
+    // ===================== Init =====================
+    
     buildChips();
     buildLegend();
+    buildR2RSelect();
   </script>
 </body>
 </html>
