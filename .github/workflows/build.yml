@@ -77,6 +77,7 @@ jobs:
             mingw-w64-x86_64-gtk3
             mingw-w64-x86_64-pkg-config
             mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-ntldd
             make
 
       - name: Configure
@@ -90,13 +91,56 @@ jobs:
           cd build
           make -j$(nproc)
 
-      - name: Upload Windows binary
+      - name: Bundle DLLs for portable distribution
+        run: |
+          mkdir -p dist
+          cp build/resistorcal.exe dist/
+          cp data/ui.glade dist/
+          
+          # Copy required DLLs using ntldd
+          echo "Finding required DLLs..."
+          ntldd -R build/resistorcal.exe | grep -i mingw64 | awk '{print $3}' | while read dll; do
+            if [ -f "$dll" ]; then
+              echo "Copying: $dll"
+              cp "$dll" dist/
+            fi
+          done
+          
+          # Copy GTK3 runtime data (icons, themes, etc.)
+          echo "Copying GTK3 runtime files..."
+          mkdir -p dist/share/glib-2.0/schemas
+          mkdir -p dist/share/icons
+          mkdir -p dist/lib/gdk-pixbuf-2.0
+          
+          # Schemas
+          cp -r /mingw64/share/glib-2.0/schemas/* dist/share/glib-2.0/schemas/ 2>/dev/null || true
+          
+          # Compile schemas
+          glib-compile-schemas dist/share/glib-2.0/schemas/ 2>/dev/null || true
+          
+          # Adwaita icons (minimal set for GTK)
+          if [ -d /mingw64/share/icons/Adwaita ]; then
+            mkdir -p dist/share/icons/Adwaita
+            cp -r /mingw64/share/icons/Adwaita/index.theme dist/share/icons/Adwaita/ 2>/dev/null || true
+            cp -r /mingw64/share/icons/Adwaita/scalable dist/share/icons/Adwaita/ 2>/dev/null || true
+            cp -r /mingw64/share/icons/Adwaita/16x16 dist/share/icons/Adwaita/ 2>/dev/null || true
+            cp -r /mingw64/share/icons/Adwaita/22x22 dist/share/icons/Adwaita/ 2>/dev/null || true
+            cp -r /mingw64/share/icons/Adwaita/24x24 dist/share/icons/Adwaita/ 2>/dev/null || true
+          fi
+          
+          # GDK pixbuf loaders
+          if [ -d /mingw64/lib/gdk-pixbuf-2.0 ]; then
+            cp -r /mingw64/lib/gdk-pixbuf-2.0/* dist/lib/gdk-pixbuf-2.0/ 2>/dev/null || true
+          fi
+          
+          echo "Distribution files:"
+          ls -la dist/
+
+      - name: Upload Windows portable
         uses: actions/upload-artifact@v4
         with:
-          name: resistorcal-windows-x64
-          path: |
-            build/resistorcal.exe
-            data/ui.glade
+          name: resistorcal-windows-x64-portable
+          path: dist/
           retention-days: 30
 
   build-macos:

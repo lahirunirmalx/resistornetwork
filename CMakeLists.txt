@@ -44,9 +44,17 @@ if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
     else()
         add_compile_options(-O2)
     endif()
+    
+    # Windows 7+ compatibility (MSYS2/MinGW)
+    if(WIN32)
+        add_definitions(-D_WIN32_WINNT=0x0601)  # Windows 7
+        add_definitions(-DWINVER=0x0601)
+    endif()
 elseif(MSVC)
     add_compile_options(/W3 /utf-8)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+    add_definitions(-D_WIN32_WINNT=0x0601)  # Windows 7
+    add_definitions(-DWINVER=0x0601)
 endif()
 
 # ============================================================================
