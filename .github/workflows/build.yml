@@ -55,52 +55,45 @@ jobs:
           retention-days: 30
 
   build-windows:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install MinGW and GTK3
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            mingw-w64 \
-            mingw-w64-tools
+      - name: Setup MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-gtk3
+            mingw-w64-x86_64-pkg-config
+            mingw-w64-x86_64-cmake
+            make
 
-      - name: Download GTK3 for Windows
+      - name: Configure
         run: |
-          # Download pre-built GTK3 for Windows (from MSYS2)
-          mkdir -p gtk-win
-          cd gtk-win
-          curl -L -o gtk3-win64.tar.xz \
-            "https://github.com/nickvanleuven/gtk3-win64/releases/download/v1.0/gtk3-win64.tar.xz" || true
-          # If download fails, skip Windows build
-          if [ -f gtk3-win64.tar.xz ]; then
-            tar -xf gtk3-win64.tar.xz
-          fi
+          mkdir -p build
+          cd build
+          cmake .. -G "MSYS Makefiles" -DCMAKE_BUILD_TYPE=Release
 
-      - name: Build for Windows (if GTK available)
+      - name: Build
         run: |
-          if [ -d "gtk-win/mingw64" ]; then
-            echo "GTK3 for Windows found, building..."
-            mkdir -p build-win
-            cd build-win
-            x86_64-w64-mingw32-gcc \
-              -I../gtk-win/mingw64/include/gtk-3.0 \
-              -I../gtk-win/mingw64/include/glib-2.0 \
-              -I../gtk-win/mingw64/lib/glib-2.0/include \
-              -I../gtk-win/mingw64/include/pango-1.0 \
-              -I../gtk-win/mingw64/include/cairo \
-              -I../gtk-win/mingw64/include/gdk-pixbuf-2.0 \
-              -I../gtk-win/mingw64/include/atk-1.0 \
-              -L../gtk-win/mingw64/lib \
-              -o resistorcal.exe ../src/resistor.c \
-              -lgtk-3 -lgdk-3 -lglib-2.0 -lgobject-2.0 -lgio-2.0 -lpango-1.0 -lcairo -lgdk_pixbuf-2.0 -latk-1.0 \
-              -lm -mwindows 2>/dev/null || echo "Windows build skipped (GTK not available)"
-          else
-            echo "GTK3 for Windows not available, skipping Windows build"
-          fi
-        continue-on-error: true
+          cd build
+          make -j$(nproc)
+
+      - name: Upload Windows binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: resistorcal-windows-x64
+          path: |
+            build/resistorcal.exe
+            data/ui.glade
+          retention-days: 30
 
   build-macos:
     runs-on: macos-latest
