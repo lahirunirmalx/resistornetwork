@@ -69,6 +69,14 @@ static const char *color_names[] = {
     "Green", "Blue", "Violet", "Grey", "White"
 };
 
+/* Hex color values for visual display */
+static const char *color_hex[] = {
+    "#000000", "#8B4513", "#FF0000", "#FFA500", "#FFFF00",
+    "#008000", "#0000FF", "#8B00FF", "#808080", "#FFFFFF"
+};
+#define GOLD_HEX "#FFD700"
+#define SILVER_HEX "#C0C0C0"
+
 static const char *multiplier_colors[] = {
     "Black",   /* 10^0 = 1 */
     "Brown",   /* 10^1 = 10 */
@@ -81,6 +89,112 @@ static const char *multiplier_colors[] = {
     "Grey",    /* 10^8 = 100M */
     "White"    /* 10^9 = 1G */
 };
+
+/*
+ * Create color tags in a text buffer for colored output.
+ */
+static void create_color_tags(GtkTextBuffer *buffer)
+{
+    int i;
+    GtkTextTagTable *table = gtk_text_buffer_get_tag_table(buffer);
+    
+    for (i = 0; i < 10; i++) {
+        if (!gtk_text_tag_table_lookup(table, color_names[i])) {
+            gtk_text_buffer_create_tag(buffer, color_names[i],
+                                       "background", color_hex[i],
+                                       "foreground", (i == 0 || i == 6 || i == 7) ? "#FFFFFF" : "#000000",
+                                       NULL);
+        }
+    }
+    if (!gtk_text_tag_table_lookup(table, "Gold")) {
+        gtk_text_buffer_create_tag(buffer, "Gold",
+                                   "background", GOLD_HEX,
+                                   "foreground", "#000000",
+                                   NULL);
+    }
+    if (!gtk_text_tag_table_lookup(table, "Silver")) {
+        gtk_text_buffer_create_tag(buffer, "Silver",
+                                   "background", SILVER_HEX,
+                                   "foreground", "#000000",
+                                   NULL);
+    }
+}
+
+/*
+ * Insert a colored box with text into the buffer.
+ */
+static void insert_color_box(GtkTextBuffer *buffer, GtkTextIter *iter, const char *color_name)
+{
+    char box_text[32];
+    snprintf(box_text, sizeof(box_text), " %s ", color_name);
+    gtk_text_buffer_insert_with_tags_by_name(buffer, iter, box_text, -1, color_name, NULL);
+}
+
+/*
+ * Insert 4-band color code with visual boxes.
+ */
+static void insert_4band_visual(GtkTextBuffer *buffer, GtkTextIter *iter, double ohms)
+{
+    double normalized;
+    int sig2, exp10, d1, d2;
+    
+    if (ohms <= 0) {
+        gtk_text_buffer_insert(buffer, iter, "(invalid)", -1);
+        return;
+    }
+
+    exp10 = (int)floor(log10(ohms)) - 1;
+    if (exp10 < 0) exp10 = 0;
+    if (exp10 > 9) exp10 = 9;
+    normalized = ohms / pow(10, exp10);
+    sig2 = (int)round(normalized);
+    if (sig2 >= 100) { sig2 /= 10; exp10++; }
+    if (sig2 < 10) { sig2 *= 10; exp10--; }
+    if (exp10 < 0) exp10 = 0;
+    if (exp10 > 9) exp10 = 9;
+    d1 = sig2 / 10;
+    d2 = sig2 % 10;
+
+    gtk_text_buffer_insert(buffer, iter, "4-band: ", -1);
+    insert_color_box(buffer, iter, color_names[d1]);
+    insert_color_box(buffer, iter, color_names[d2]);
+    insert_color_box(buffer, iter, multiplier_colors[exp10]);
+    insert_color_box(buffer, iter, "Gold");
+}
+
+/*
+ * Insert 5-band color code with visual boxes.
+ */
+static void insert_5band_visual(GtkTextBuffer *buffer, GtkTextIter *iter, double ohms)
+{
+    double normalized;
+    int sig3, exp10, d1, d2, d3;
+    
+    if (ohms <= 0) {
+        gtk_text_buffer_insert(buffer, iter, "(invalid)", -1);
+        return;
+    }
+
+    exp10 = (int)floor(log10(ohms)) - 2;
+    if (exp10 < 0) exp10 = 0;
+    if (exp10 > 9) exp10 = 9;
+    normalized = ohms / pow(10, exp10);
+    sig3 = (int)round(normalized);
+    if (sig3 >= 1000) { sig3 /= 10; exp10++; }
+    if (sig3 < 100) { sig3 *= 10; exp10--; }
+    if (exp10 < 0) exp10 = 0;
+    if (exp10 > 9) exp10 = 9;
+    d1 = sig3 / 100;
+    d2 = (sig3 / 10) % 10;
+    d3 = sig3 % 10;
+
+    gtk_text_buffer_insert(buffer, iter, "5-band: ", -1);
+    insert_color_box(buffer, iter, color_names[d1]);
+    insert_color_box(buffer, iter, color_names[d2]);
+    insert_color_box(buffer, iter, color_names[d3]);
+    insert_color_box(buffer, iter, multiplier_colors[exp10]);
+    insert_color_box(buffer, iter, "Brown");
+}
 
 /*
  * Generate 4-band color code.
@@ -217,46 +331,6 @@ static const char *get_smd_code(double ohms)
     return buf;
 }
 
-/*
- * Format color code info for a single resistor value.
- */
-static void append_single_color_code(GString *str, double ohms)
-{
-    g_string_append_printf(str, "      %.2f Ω: 4-band: %s | 5-band: %s | SMD: %s\n",
-                           ohms, get_4band_code(ohms), get_5band_code(ohms), get_smd_code(ohms));
-}
-
-/*
- * Format color codes for all individual resistors in a result.
- * Shows codes for each unique resistor value used.
- */
-static void append_result_color_codes(GString *str, const Result *res)
-{
-    int p;
-    double seen[MAX_RESISTORS_PER_NET];
-    int num_seen = 0;
-    int already_shown;
-
-    g_string_append(str, "    Component resistor codes:\n");
-    
-    for (p = 0; p < res->num_parts; p++) {
-        int s;
-        /* Check if we've already shown this value */
-        already_shown = 0;
-        for (s = 0; s < num_seen; s++) {
-            if (fabs(seen[s] - res->parts[p]) < 0.01) {
-                already_shown = 1;
-                break;
-            }
-        }
-        if (!already_shown) {
-            append_single_color_code(str, res->parts[p]);
-            if (num_seen < MAX_RESISTORS_PER_NET)
-                seen[num_seen++] = res->parts[p];
-        }
-    }
-}
-
 /* ========================================================================
  * RESISTOR VALUE PARSING
  * ======================================================================== */
@@ -298,7 +372,6 @@ static void on_calculate_clicked(GtkButton *button, gpointer user_data)
     gchar *tol_text = NULL;
     Network **networks = NULL;
     int count[MAX_N + 1] = {0};
-    GString *result;
     int found = 0;
     int i, n, a, b, j_idx;
 
@@ -473,57 +546,103 @@ static void on_calculate_clicked(GtkButton *button, gpointer user_data)
         qsort(results, num_results, sizeof(Result), compare_results);
     }
 
-    /* Build output string */
-    result = g_string_new("");
-    g_string_append_printf(result,
-        "\n-- Networks within %.2f%% tolerance of %.2f Ω --\n",
-        tolPerc, target);
-    g_string_append_printf(result,
-        "   Found %d combinations, showing top %d sorted by error\n\n",
-        num_results, num_results < MAX_RESULTS ? num_results : MAX_RESULTS);
-
-    for (i = 0; i < num_results && i < MAX_RESULTS; i++) {
-        /* Show rank for top 5 */
-        if (i < TOP_N_CODES) {
-            g_string_append_printf(result, "#%d ", i + 1);
-        }
+    /* Get text buffer and create color tags */
+    {
+        GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(textview_output));
+        GtkTextIter iter;
+        char line[512];
+        int p;
+        double seen[MAX_RESISTORS_PER_NET];
+        int num_seen;
         
-        g_string_append_printf(result,
-            "%s = %.2f Ω (%d resistor%s, error %.2f%%)\n",
-            results[i].expr,
-            results[i].R,
-            results[i].n,
-            results[i].n > 1 ? "s" : "",
-            results[i].error * 100);
+        create_color_tags(buffer);
+        gtk_text_buffer_set_text(buffer, "", -1);
+        gtk_text_buffer_get_end_iter(buffer, &iter);
 
-        /* Show color codes for individual resistors in top 5 results */
-        if (i < TOP_N_CODES) {
-            append_result_color_codes(result, &results[i]);
+        /* Header */
+        snprintf(line, sizeof(line),
+            "\n-- Networks within %.2f%% tolerance of %.2f Ω --\n"
+            "   Found %d combinations, showing top %d sorted by error\n\n",
+            tolPerc, target,
+            num_results, num_results < MAX_RESULTS ? num_results : MAX_RESULTS);
+        gtk_text_buffer_insert(buffer, &iter, line, -1);
+
+        for (i = 0; i < num_results && i < MAX_RESULTS; i++) {
+            /* Show rank for top 5 */
+            if (i < TOP_N_CODES) {
+                snprintf(line, sizeof(line), "#%d ", i + 1);
+                gtk_text_buffer_insert(buffer, &iter, line, -1);
+            }
+            
+            snprintf(line, sizeof(line),
+                "%s = %.2f Ω (%d resistor%s, error %.2f%%)\n",
+                results[i].expr,
+                results[i].R,
+                results[i].n,
+                results[i].n > 1 ? "s" : "",
+                results[i].error * 100);
+            gtk_text_buffer_insert(buffer, &iter, line, -1);
+
+            /* Show color codes with visual boxes for top 5 results */
+            if (i < TOP_N_CODES) {
+                int already_shown;
+                num_seen = 0;
+                gtk_text_buffer_insert(buffer, &iter, "    Component resistor codes:\n", -1);
+                
+                for (p = 0; p < results[i].num_parts; p++) {
+                    int s;
+                    already_shown = 0;
+                    for (s = 0; s < num_seen; s++) {
+                        if (fabs(seen[s] - results[i].parts[p]) < 0.01) {
+                            already_shown = 1;
+                            break;
+                        }
+                    }
+                    if (!already_shown) {
+                        snprintf(line, sizeof(line), "      %.2f Ω: ", results[i].parts[p]);
+                        gtk_text_buffer_insert(buffer, &iter, line, -1);
+                        insert_4band_visual(buffer, &iter, results[i].parts[p]);
+                        gtk_text_buffer_insert(buffer, &iter, "\n              ", -1);
+                        insert_5band_visual(buffer, &iter, results[i].parts[p]);
+                        snprintf(line, sizeof(line), " | SMD: %s\n", get_smd_code(results[i].parts[p]));
+                        gtk_text_buffer_insert(buffer, &iter, line, -1);
+                        if (num_seen < MAX_RESISTORS_PER_NET)
+                            seen[num_seen++] = results[i].parts[p];
+                    }
+                }
+            }
+            gtk_text_buffer_insert(buffer, &iter, "\n", -1);
+            found = 1;
         }
-        g_string_append(result, "\n");
-        found = 1;
-    }
 
-    if (num_results > MAX_RESULTS) {
-        g_string_append_printf(result, "... and %d more results\n\n",
-                               num_results - MAX_RESULTS);
-    }
+        if (num_results > MAX_RESULTS) {
+            snprintf(line, sizeof(line), "... and %d more results\n\n",
+                     num_results - MAX_RESULTS);
+            gtk_text_buffer_insert(buffer, &iter, line, -1);
+        }
 
+        if (!found)
+            gtk_text_buffer_insert(buffer, &iter, "No network found within the specified tolerance.\n", -1);
+
+        /* Add color code legend with visual boxes */
+        gtk_text_buffer_insert(buffer, &iter, "\n-- Color Code Reference --\n", -1);
+        gtk_text_buffer_insert(buffer, &iter, "Digits: ", -1);
+        for (i = 0; i < 10; i++) {
+            snprintf(line, sizeof(line), "%d=", i);
+            gtk_text_buffer_insert(buffer, &iter, line, -1);
+            insert_color_box(buffer, &iter, color_names[i]);
+            gtk_text_buffer_insert(buffer, &iter, " ", -1);
+        }
+        gtk_text_buffer_insert(buffer, &iter, "\nTolerance: ", -1);
+        insert_color_box(buffer, &iter, "Gold");
+        gtk_text_buffer_insert(buffer, &iter, "=5% ", -1);
+        insert_color_box(buffer, &iter, "Brown");
+        gtk_text_buffer_insert(buffer, &iter, "=1% ", -1);
+        insert_color_box(buffer, &iter, "Silver");
+        gtk_text_buffer_insert(buffer, &iter, "=10%\n", -1);
+    }
+    
     free(results);
-
-    if (!found)
-        g_string_append(result, "No network found within the specified tolerance.\n");
-
-    /* Add color code legend */
-    g_string_append(result, "\n-- Color Code Reference --\n");
-    g_string_append(result, "Digits: Black=0, Brown=1, Red=2, Orange=3, Yellow=4\n");
-    g_string_append(result, "        Green=5, Blue=6, Violet=7, Grey=8, White=9\n");
-    g_string_append(result, "Tolerance: Gold=5%, Brown=1%, Red=2%, Silver=10%\n");
-
-    gtk_text_buffer_set_text(
-        gtk_text_view_get_buffer(GTK_TEXT_VIEW(textview_output)),
-        result->str, -1);
-    g_string_free(result, TRUE);
 
 cleanup:
     if (networks) {
