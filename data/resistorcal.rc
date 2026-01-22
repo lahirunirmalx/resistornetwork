@@ -1,0 +1,35 @@
+/* Windows resource file for resistorcal */
+#include <windows.h>
+
+/* Application icon - ID 1 is the default app icon */
+1 ICON "resistorcal.ico"
+
+/* Version info */
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION 1,0,0,0
+PRODUCTVERSION 1,0,0,0
+FILEFLAGSMASK VS_FFI_FILEFLAGSMASK
+FILEFLAGS 0
+FILEOS VOS_NT_WINDOWS32
+FILETYPE VFT_APP
+FILESUBTYPE VFT2_UNKNOWN
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904B0"
+        BEGIN
+            VALUE "CompanyName", "\0"
+            VALUE "FileDescription", "Resistor Network Calculator\0"
+            VALUE "FileVersion", "1.0.0\0"
+            VALUE "InternalName", "resistorcal\0"
+            VALUE "LegalCopyright", "MIT License\0"
+            VALUE "OriginalFilename", "resistorcal.exe\0"
+            VALUE "ProductName", "Resistor Calculator\0"
+            VALUE "ProductVersion", "1.0.0\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <!-- Background circle -->
+  <circle cx="64" cy="64" r="60" fill="#2d5a27"/>
+  <circle cx="64" cy="64" r="54" fill="#3d7a37"/>
+  
+  <!-- Resistor body (zigzag symbol) -->
+  <g stroke="#f4d03f" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Left lead -->
+    <line x1="20" y1="64" x2="32" y2="64"/>
+    <!-- Zigzag -->
+    <polyline points="32,64 38,48 50,80 62,48 74,80 86,48 92,64"/>
+    <!-- Right lead -->
+    <line x1="92" y1="64" x2="108" y2="64"/>
+  </g>
+  
+  <!-- Color bands on resistor -->
+  <rect x="36" y="52" width="6" height="24" fill="#8B4513" rx="1"/>
+  <rect x="46" y="52" width="6" height="24" fill="#000000" rx="1"/>
+  <rect x="56" y="52" width="6" height="24" fill="#ff0000" rx="1"/>
+  <rect x="66" y="52" width="6" height="24" fill="#ffd700" rx="1"/>
+  
+  <!-- Ohm symbol at bottom -->
+  <text x="64" y="108" font-family="serif" font-size="24" fill="#f4d03f" text-anchor="middle" font-weight="bold">Ω</text>
+</svg>

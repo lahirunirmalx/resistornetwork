@@ -1,0 +1,26 @@
+{
+  "name": "resistorcal-mobile",
+  "version": "1.0.0",
+  "description": "Resistor Calculator mobile app",
+  "main": "index.js",
+  "scripts": {
+    "build": "cp -r ../web/* www/",
+    "sync": "npx cap sync",
+    "android": "npx cap open android",
+    "ios": "npx cap open ios",
+    "android:build": "cd android && ./gradlew assembleRelease",
+    "icons": "../scripts/generate-mobile-icons.sh"
+  },
+  "dependencies": {
+    "@capacitor/android": "^5.0.0",
+    "@capacitor/core": "^5.0.0",
+    "@capacitor/ios": "^5.0.0",
+    "@capacitor/splash-screen": "^5.0.0",
+    "@capacitor/status-bar": "^5.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^5.0.0"
+  },
+  "author": "Lahiru",
+  "license": "MIT"
+}

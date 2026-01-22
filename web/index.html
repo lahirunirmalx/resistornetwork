@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#2d5a27">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="Find resistor combinations for target resistance with color codes">
+  
+  <title>Resistor Calculator</title>
+  
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/svg+xml" href="icons/resistorcal.svg">
+  <link rel="apple-touch-icon" href="icons/resistorcal-180.png">
+  
+  <style>
+    :root {
+      --bg-primary: #1a1a2e;
+      --bg-secondary: #16213e;
+      --bg-card: #0f3460;
+      --accent: #e94560;
+      --accent-light: #ff6b6b;
+      --text-primary: #eee;
+      --text-secondary: #aaa;
+      --success: #4ade80;
+      --resistor-body: #d4a373;
+      --gold: #ffd700;
+    }
+    
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    
+    .container {
+      max-width: 100%;
+      padding: 16px;
+      padding-bottom: env(safe-area-inset-bottom, 16px);
+    }
+    
+    header {
+      background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-card) 100%);
+      padding: 20px 16px;
+      text-align: center;
+      border-bottom: 2px solid var(--accent);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    
+    header h1 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    
+    header h1 svg {
+      width: 32px;
+      height: 32px;
+    }
+    
+    .section {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    
+    .section-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+    }
+    
+    /* Resistor Grid - Horizontal scroll on mobile */
+    .resistor-grid-container {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin: 0 -16px;
+      padding: 0 16px;
+    }
+    
+    .resistor-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(70px, 1fr));
+      gap: 8px;
+      min-width: max-content;
+    }
+    
+    @media (min-width: 600px) {
+      .resistor-grid {
+        grid-template-columns: repeat(10, 1fr);
+        min-width: unset;
+      }
+    }
+    
+    .resistor-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px;
+      background: var(--bg-card);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 2px solid transparent;
+      font-size: 0.85rem;
+      white-space: nowrap;
+    }
+    
+    .resistor-item:active {
+      transform: scale(0.95);
+    }
+    
+    .resistor-item.selected {
+      border-color: var(--success);
+      background: rgba(74, 222, 128, 0.1);
+    }
+    
+    .resistor-item input[type="checkbox"] {
+      display: none;
+    }
+    
+    .resistor-item .checkmark {
+      width: 18px;
+      height: 18px;
+      border: 2px solid var(--text-secondary);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    
+    .resistor-item.selected .checkmark {
+      background: var(--success);
+      border-color: var(--success);
+    }
+    
+    .resistor-item.selected .checkmark::after {
+      content: '✓';
+      color: var(--bg-primary);
+      font-size: 12px;
+      font-weight: bold;
+    }
+    
+    /* Quick actions for resistor selection */
+    .quick-actions {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    
+    .quick-btn {
+      padding: 8px 16px;
+      background: var(--bg-card);
+      border: 1px solid var(--text-secondary);
+      border-radius: 20px;
+      color: var(--text-primary);
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .quick-btn:active {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+    
+    /* Input Section */
+    .input-group {
+      margin-bottom: 16px;
+    }
+    
+    .input-group label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+    
+    .input-row {
+      display: flex;
+      gap: 12px;
+    }
+    
+    .input-row > * {
+      flex: 1;
+    }
+    
+    input[type="number"], select {
+      width: 100%;
+      padding: 14px;
+      font-size: 1rem;
+      background: var(--bg-card);
+      border: 2px solid transparent;
+      border-radius: 10px;
+      color: var(--text-primary);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    
+    input[type="number"]:focus, select:focus {
+      border-color: var(--accent);
+    }
+    
+    select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23aaa'%3E%3Cpath d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 40px;
+    }
+    
+    .calculate-btn {
+      width: 100%;
+      padding: 16px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+      border: none;
+      border-radius: 12px;
+      color: white;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 15px rgba(233, 69, 96, 0.3);
+    }
+    
+    .calculate-btn:active {
+      transform: scale(0.98);
+    }
+    
+    /* Results */
+    .results {
+      background: var(--bg-card);
+      border-radius: 10px;
+      padding: 16px;
+      max-height: 50vh;
+      overflow-y: auto;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.85rem;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    
+    .results:empty::before {
+      content: 'Results will appear here...';
+      color: var(--text-secondary);
+    }
+    
+    .result-item {
+      padding: 12px;
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      margin-bottom: 12px;
+      border-left: 3px solid var(--success);
+    }
+    
+    .result-item .formula {
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+    
+    .result-item .details {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+    
+    .color-code {
+      display: flex;
+      gap: 4px;
+      margin-top: 8px;
+      align-items: center;
+    }
+    
+    .color-band {
+      width: 20px;
+      height: 28px;
+      border-radius: 3px;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    
+    .color-code-label {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      margin-left: 8px;
+    }
+    
+    /* Top results highlighting */
+    .result-item.top-result {
+      border-left-color: var(--gold);
+      background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(255, 215, 0, 0.05) 100%);
+    }
+    
+    .rank-badge {
+      display: inline-block;
+      background: var(--gold);
+      color: var(--bg-primary);
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+    
+    .color-codes-section {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .color-codes-label {
+      font-size: 0.7rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+    
+    /* Parts grid for individual resistor codes */
+    .parts-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    
+    .part-code {
+      background: rgba(0,0,0,0.2);
+      border-radius: 6px;
+      padding: 8px;
+      min-width: 140px;
+    }
+    
+    .part-value {
+      font-weight: 600;
+      color: var(--gold);
+      margin-bottom: 6px;
+      font-size: 0.9rem;
+    }
+    
+    .part-code .color-code {
+      margin-top: 4px;
+    }
+    
+    .part-code .color-band {
+      width: 16px;
+      height: 22px;
+    }
+    
+    /* Color Legend */
+    .legend {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+      margin-top: 16px;
+    }
+    
+    @media (max-width: 400px) {
+      .legend {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.7rem;
+    }
+    
+    .legend-color {
+      width: 16px;
+      height: 16px;
+      border-radius: 3px;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    
+    /* Install prompt */
+    .install-prompt {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      left: 16px;
+      right: 16px;
+      background: var(--bg-card);
+      padding: 16px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+      z-index: 1000;
+      animation: slideUp 0.3s ease;
+    }
+    
+    @keyframes slideUp {
+      from { transform: translateY(100px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    
+    .install-prompt.show {
+      display: block;
+    }
+    
+    .install-prompt h3 {
+      margin: 0 0 8px 0;
+      font-size: 1rem;
+    }
+    
+    .install-prompt p {
+      margin: 0 0 12px 0;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+    
+    .install-prompt .btn-row {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .install-prompt button {
+      flex: 1;
+      padding: 12px;
+      border-radius: 8px;
+      border: none;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+    
+    .install-prompt .install-btn {
+      background: var(--accent);
+      color: white;
+    }
+    
+    .install-prompt .dismiss-btn {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>
+      <svg viewBox="0 0 128 128" fill="none">
+        <circle cx="64" cy="64" r="54" fill="#3d7a37"/>
+        <g stroke="#f4d03f" stroke-width="5" fill="none" stroke-linecap="round">
+          <line x1="20" y1="64" x2="32" y2="64"/>
+          <polyline points="32,64 38,48 50,80 62,48 74,80 86,48 92,64"/>
+          <line x1="92" y1="64" x2="108" y2="64"/>
+        </g>
+      </svg>
+      Resistor Calculator
+    </h1>
+  </header>
+
+  <div class="container">
+    <!-- Resistor Selection -->
+    <div class="section">
+      <div class="section-title">Select Available Resistors</div>
+      <div class="quick-actions">
+        <button class="quick-btn" onclick="selectAll()">Select All</button>
+        <button class="quick-btn" onclick="selectNone()">Clear All</button>
+        <button class="quick-btn" onclick="selectE12()">E12 Series</button>
+      </div>
+      <div class="resistor-grid-container">
+        <div class="resistor-grid" id="resistorGrid"></div>
+      </div>
+    </div>
+
+    <!-- Input Parameters -->
+    <div class="section">
+      <div class="section-title">Target Value</div>
+      <div class="input-row">
+        <div class="input-group">
+          <label>Target Resistance (Ω)</label>
+          <input type="number" id="targetInput" placeholder="e.g., 1500" inputmode="decimal">
+        </div>
+        <div class="input-group">
+          <label>Tolerance (%)</label>
+          <select id="tolSelect">
+            <option value="1">1%</option>
+            <option value="2">2%</option>
+            <option value="5" selected>5%</option>
+            <option value="10">10%</option>
+          </select>
+        </div>
+      </div>
+      <button class="calculate-btn" onclick="calculateNetworks()">Calculate</button>
+    </div>
+
+    <!-- Results -->
+    <div class="section">
+      <div class="section-title">Results</div>
+      <div class="results" id="output"></div>
+    </div>
+
+    <!-- Color Legend -->
+    <div class="section">
+      <div class="section-title">Color Code Reference</div>
+      <div class="legend" id="colorLegend"></div>
+    </div>
+  </div>
+
+  <!-- Install Prompt -->
+  <div class="install-prompt" id="installPrompt">
+    <h3>📱 Install App</h3>
+    <p>Add Resistor Calculator to your home screen for quick access</p>
+    <div class="btn-row">
+      <button class="dismiss-btn" onclick="dismissInstall()">Not Now</button>
+      <button class="install-btn" onclick="installApp()">Install</button>
+    </div>
+  </div>
+
+  <script>
+    // Resistor values (standard E24 series + common values)
+    const RESISTOR_VALUES = [
+      1, 1.2, 1.5, 1.8, 2.2, 2.7, 3.3, 3.9, 4.7, 5.6, 6.8, 7.5, 8.2,
+      10, 12, 15, 18, 22, 24, 27, 33, 39, 47, 56, 68, 75, 82,
+      100, 120, 150, 180, 220, 270, 330, 390, 470, 560, 680, 820,
+      1000, 1200, 1500, 1800, 2200, 2700, 3000, 3300, 3900, 4700, 5600, 6800, 8200,
+      10000, 12000, 15000, 18000, 22000, 33000, 39000, 47000, 56000, 68000,
+      100000, 120000, 150000, 180000, 220000, 270000, 330000, 390000, 470000, 560000, 680000,
+      1000000, 2200000, 3300000, 4700000
+    ];
+
+    // E12 series multipliers
+    const E12_BASE = [1.0, 1.2, 1.5, 1.8, 2.2, 2.7, 3.3, 3.9, 4.7, 5.6, 6.8, 8.2];
+
+    const COLOR_NAMES = ["Black", "Brown", "Red", "Orange", "Yellow", "Green", "Blue", "Violet", "Grey", "White"];
+    const COLOR_HEX = ["#000", "#8B4513", "#f00", "#FFA500", "#ff0", "#0f0", "#00f", "#8B00FF", "#808080", "#fff"];
+
+    let selectedResistors = new Set(RESISTOR_VALUES);
+
+    // Format resistance value
+    function formatResistance(ohms) {
+      if (ohms >= 1000000) return (ohms / 1000000).toFixed(ohms % 1000000 ? 1 : 0) + 'M';
+      if (ohms >= 1000) return (ohms / 1000).toFixed(ohms % 1000 ? 1 : 0) + 'K';
+      return ohms.toString();
+    }
+
+    // Build resistor grid
+    function buildResistorGrid() {
+      const grid = document.getElementById('resistorGrid');
+      grid.innerHTML = RESISTOR_VALUES.map(r => `
+        <div class="resistor-item ${selectedResistors.has(r) ? 'selected' : ''}" 
+             onclick="toggleResistor(${r}, this)">
+          <span class="checkmark"></span>
+          <span>${formatResistance(r)}Ω</span>
+        </div>
+      `).join('');
+    }
+
+    function toggleResistor(value, el) {
+      if (selectedResistors.has(value)) {
+        selectedResistors.delete(value);
+        el.classList.remove('selected');
+      } else {
+        selectedResistors.add(value);
+        el.classList.add('selected');
+      }
+    }
+
+    function selectAll() {
+      selectedResistors = new Set(RESISTOR_VALUES);
+      buildResistorGrid();
+    }
+
+    function selectNone() {
+      selectedResistors.clear();
+      buildResistorGrid();
+    }
+
+    function selectE12() {
+      selectedResistors.clear();
+      for (let mult = 1; mult <= 1000000; mult *= 10) {
+        for (const base of E12_BASE) {
+          const val = base * mult;
+          if (RESISTOR_VALUES.includes(val)) selectedResistors.add(val);
+        }
+      }
+      buildResistorGrid();
+    }
+
+    // Color code generation
+    function get4BandCode(ohms) {
+      if (ohms <= 0) return { text: "(invalid)", colors: [] };
+      let exp10 = Math.floor(Math.log10(ohms)) - 1;
+      if (exp10 < 0) exp10 = 0;
+      if (exp10 > 9) exp10 = 9;
+      let sig2 = Math.round(ohms / Math.pow(10, exp10));
+      if (sig2 >= 100) { sig2 = Math.floor(sig2 / 10); exp10++; }
+      if (sig2 < 10) { sig2 *= 10; exp10--; }
+      if (exp10 < 0) exp10 = 0;
+      if (exp10 > 9) exp10 = 9;
+      const d1 = Math.floor(sig2 / 10);
+      const d2 = sig2 % 10;
+      return {
+        text: `${COLOR_NAMES[d1]}-${COLOR_NAMES[d2]}-${COLOR_NAMES[exp10]}-Gold`,
+        colors: [COLOR_HEX[d1], COLOR_HEX[d2], COLOR_HEX[exp10], '#FFD700']
+      };
+    }
+
+    function get5BandCode(ohms) {
+      if (ohms <= 0) return { text: "(invalid)", colors: [] };
+      let exp10 = Math.floor(Math.log10(ohms)) - 2;
+      if (exp10 < 0) exp10 = 0;
+      if (exp10 > 9) exp10 = 9;
+      let sig3 = Math.round(ohms / Math.pow(10, exp10));
+      if (sig3 >= 1000) { sig3 = Math.floor(sig3 / 10); exp10++; }
+      if (sig3 < 100) { sig3 *= 10; exp10--; }
+      if (exp10 < 0) exp10 = 0;
+      if (exp10 > 9) exp10 = 9;
+      const d1 = Math.floor(sig3 / 100);
+      const d2 = Math.floor(sig3 / 10) % 10;
+      const d3 = sig3 % 10;
+      return {
+        text: `${COLOR_NAMES[d1]}-${COLOR_NAMES[d2]}-${COLOR_NAMES[d3]}-${COLOR_NAMES[exp10]}-Brown`,
+        colors: [COLOR_HEX[d1], COLOR_HEX[d2], COLOR_HEX[d3], COLOR_HEX[exp10], '#8B4513']
+      };
+    }
+
+    function getSMDCode(ohms) {
+      if (ohms <= 0) return "(invalid)";
+      if (ohms < 10) {
+        const whole = Math.floor(ohms);
+        const frac = Math.round((ohms - whole) * 10) % 10;
+        return `${whole}R${frac}`;
+      }
+      let exp10 = Math.floor(Math.log10(ohms)) - 1;
+      if (exp10 < 0) exp10 = 0;
+      let sig2 = Math.round(ohms / Math.pow(10, exp10));
+      if (sig2 >= 100) { sig2 = Math.floor(sig2 / 10); exp10++; }
+      if (sig2 < 10) { sig2 *= 10; exp10--; }
+      if (exp10 < 0) exp10 = 0;
+      return `${sig2}${exp10}`;
+    }
+
+    function renderColorBands(colors) {
+      return colors.map(c => `<div class="color-band" style="background:${c}"></div>`).join('');
+    }
+
+    // Main calculation
+    function calculateNetworks() {
+      const target = parseFloat(document.getElementById('targetInput').value);
+      const tolPerc = parseFloat(document.getElementById('tolSelect').value);
+      const tol = tolPerc / 100;
+      const output = document.getElementById('output');
+
+      if (isNaN(target) || target <= 0) {
+        output.innerHTML = '<div style="color:#ff6b6b">⚠️ Enter a valid target resistance</div>';
+        return;
+      }
+
+      const available = Array.from(selectedResistors);
+      if (available.length === 0) {
+        output.innerHTML = '<div style="color:#ff6b6b">⚠️ Select at least one resistor</div>';
+        return;
+      }
+
+      const MAX_N = 5, MAX_NETWORKS = 10000;
+      const networks = Array.from({ length: MAX_N + 1 }, () => []);
+
+      // Base case - track individual resistor values in parts array
+      available.forEach(r => {
+        networks[1].push({ R: r, n: 1, expr: formatResistance(r) + 'Ω', parts: [r] });
+      });
+
+      // Build combinations
+      for (let n = 2; n <= MAX_N; n++) {
+        for (let i = 1; i < n; i++) {
+          const j = n - i;
+          for (let a = 0; a < networks[i].length; a++) {
+            const netA = networks[i][a];
+            const bStart = (i === j) ? a : 0;
+            for (let b = bStart; b < networks[j].length; b++) {
+              const netB = networks[j][b];
+              // Merge parts arrays from both networks
+              const combinedParts = [...netA.parts, ...netB.parts];
+              if (networks[n].length < MAX_NETWORKS) {
+                networks[n].push({
+                  R: netA.R + netB.R,
+                  n: netA.n + netB.n,
+                  expr: `(${netA.expr} + ${netB.expr})`,
+                  parts: combinedParts
+                });
+              }
+              if (netA.R > 0 && netB.R > 0 && networks[n].length < MAX_NETWORKS) {
+                networks[n].push({
+                  R: 1.0 / ((1.0 / netA.R) + (1.0 / netB.R)),
+                  n: netA.n + netB.n,
+                  expr: `(${netA.expr} ∥ ${netB.expr})`,
+                  parts: combinedParts
+                });
+              }
+            }
+          }
+        }
+      }
+
+      // Find matches
+      const results = [];
+      for (let n = 1; n <= MAX_N; n++) {
+        for (const net of networks[n]) {
+          const relError = Math.abs(net.R - target) / target;
+          if (relError <= tol) {
+            results.push({ ...net, error: relError * 100 });
+          }
+        }
+      }
+
+      // Sort by error
+      results.sort((a, b) => a.error - b.error);
+
+      if (results.length === 0) {
+        output.innerHTML = '<div style="color:#ff6b6b">No combinations found within tolerance</div>';
+        return;
+      }
+
+      // Helper to get unique resistor values from parts
+      function getUniqueParts(parts) {
+        const unique = [];
+        for (const p of parts) {
+          if (!unique.some(u => Math.abs(u - p) < 0.01)) {
+            unique.push(p);
+          }
+        }
+        return unique.sort((a, b) => a - b);
+      }
+
+      // Render results (limit to 50 for performance)
+      // Show color codes for individual resistors in top 5 results
+      output.innerHTML = results.slice(0, 50).map((r, idx) => {
+        let colorHtml = '';
+        // Show color codes for individual resistors in top 5 results
+        if (idx < 5) {
+          const uniqueParts = getUniqueParts(r.parts);
+          const partsHtml = uniqueParts.map(part => {
+            const band4 = get4BandCode(part);
+            const band5 = get5BandCode(part);
+            const smd = getSMDCode(part);
+            return `
+              <div class="part-code">
+                <div class="part-value">${formatResistance(part)}Ω</div>
+                <div class="color-code">
+                  ${renderColorBands(band4.colors)}
+                  <span class="color-code-label">4-band</span>
+                </div>
+                <div class="color-code">
+                  ${renderColorBands(band5.colors)}
+                  <span class="color-code-label">5-band</span>
+                </div>
+                <div style="font-size:0.75rem;color:var(--text-secondary)">SMD: <strong>${smd}</strong></div>
+              </div>
+            `;
+          }).join('');
+          colorHtml = `
+            <div class="color-codes-section">
+              <div class="color-codes-label">Component resistor codes:</div>
+              <div class="parts-grid">${partsHtml}</div>
+            </div>
+          `;
+        }
+        const rankBadge = idx < 5 ? `<span class="rank-badge">#${idx + 1}</span>` : '';
+        return `
+          <div class="result-item ${idx < 5 ? 'top-result' : ''}">
+            <div class="formula">${rankBadge}${r.expr}</div>
+            <div class="details">
+              = ${r.R.toFixed(2)}Ω • ${r.n} resistor${r.n > 1 ? 's' : ''} • error: ${r.error.toFixed(2)}%
+            </div>
+            ${colorHtml}
+          </div>
+        `;
+      }).join('');
+
+      if (results.length > 50) {
+        output.innerHTML += `<div style="color:var(--text-secondary);text-align:center;padding:10px">
+          ... and ${results.length - 50} more results
+        </div>`;
+      }
+    }
+
+    // Build color legend
+    function buildColorLegend() {
+      const legend = document.getElementById('colorLegend');
+      legend.innerHTML = COLOR_NAMES.map((name, i) => `
+        <div class="legend-item">
+          <div class="legend-color" style="background:${COLOR_HEX[i]}"></div>
+          <span>${i}=${name}</span>
+        </div>
+      `).join('') + `
+        <div class="legend-item">
+          <div class="legend-color" style="background:#FFD700"></div>
+          <span>Gold=5%</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background:#C0C0C0"></div>
+          <span>Silver=10%</span>
+        </div>
+      `;
+    }
+
+    // PWA Install
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      setTimeout(() => {
+        document.getElementById('installPrompt').classList.add('show');
+      }, 3000);
+    });
+
+    function installApp() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(() => {
+          deferredPrompt = null;
+          document.getElementById('installPrompt').classList.remove('show');
+        });
+      }
+    }
+
+    function dismissInstall() {
+      document.getElementById('installPrompt').classList.remove('show');
+    }
+
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    }
+
+    // Init
+    buildResistorGrid();
+    buildColorLegend();
+  </script>
+</body>
+</html>

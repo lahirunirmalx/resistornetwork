@@ -1,0 +1,56 @@
+# Deploy web app to GitHub Pages
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'web/**'
+      - 'data/icons/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install icon tools
+        run: sudo apt-get update && sudo apt-get install -y librsvg2-bin
+
+      - name: Generate icons
+        run: |
+          cd web/icons
+          for size in 48 72 96 128 144 152 180 192 256 512; do
+            rsvg-convert -w $size -h $size resistorcal.svg -o resistorcal-${size}.png
+          done
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'web'
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

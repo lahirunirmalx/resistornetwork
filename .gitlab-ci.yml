@@ -1,0 +1,284 @@
+# SPDX-License-Identifier: MIT
+#
+# GitLab CI/CD for resistorcal
+# Cross-platform: Linux, Windows, macOS
+#
+
+stages:
+  - icons
+  - build
+  - package
+
+variables:
+  GIT_DEPTH: 1
+
+# ============================================================================
+# Icon Generation (runs once, artifacts shared)
+# ============================================================================
+
+generate-icons:
+  stage: icons
+  image: ubuntu:22.04
+  before_script:
+    - apt-get update -qq
+    - DEBIAN_FRONTEND=noninteractive apt-get install -y -qq
+        librsvg2-bin imagemagick
+  script:
+    - ./scripts/generate-icons.sh
+  artifacts:
+    paths:
+      - data/icons/*.png
+      - data/icons/*.ico
+    expire_in: 1 week
+
+# ============================================================================
+# Linux Builds
+# ============================================================================
+
+build:ubuntu-20.04:
+  stage: build
+  image: ubuntu:20.04
+  needs: ["generate-icons"]
+  before_script:
+    - apt-get update -qq
+    - DEBIAN_FRONTEND=noninteractive apt-get install -y -qq
+        build-essential cmake pkg-config libgtk-3-dev
+  script:
+    - mkdir build && cd build
+    - cmake -DCMAKE_BUILD_TYPE=Release ..
+    - make -j$(nproc)
+  artifacts:
+    paths:
+      - build/resistorcal
+    expire_in: 1 week
+
+build:ubuntu-22.04:
+  stage: build
+  image: ubuntu:22.04
+  needs: ["generate-icons"]
+  before_script:
+    - apt-get update -qq
+    - DEBIAN_FRONTEND=noninteractive apt-get install -y -qq
+        build-essential cmake pkg-config libgtk-3-dev
+  script:
+    - mkdir build && cd build
+    - cmake -DCMAKE_BUILD_TYPE=Release ..
+    - make -j$(nproc)
+
+build:debian:
+  stage: build
+  image: debian:bookworm
+  needs: ["generate-icons"]
+  before_script:
+    - apt-get update -qq
+    - apt-get install -y -qq build-essential cmake pkg-config libgtk-3-dev
+  script:
+    - mkdir build && cd build
+    - cmake -DCMAKE_BUILD_TYPE=Release ..
+    - make -j$(nproc)
+
+build:fedora:
+  stage: build
+  image: fedora:latest
+  needs: ["generate-icons"]
+  before_script:
+    - dnf install -y -q gcc cmake pkgconfig gtk3-devel make
+  script:
+    - mkdir build && cd build
+    - cmake -DCMAKE_BUILD_TYPE=Release ..
+    - make -j$(nproc)
+
+build:alpine:
+  stage: build
+  image: alpine:latest
+  needs: ["generate-icons"]
+  before_script:
+    - apk add --no-cache build-base cmake pkgconfig gtk+3.0-dev
+  script:
+    - mkdir build && cd build
+    - cmake -DCMAKE_BUILD_TYPE=Release ..
+    - make -j$(nproc)
+
+# ============================================================================
+# Windows Build (MSYS2)
+# ============================================================================
+
+build:windows:
+  stage: build
+  tags:
+    - windows
+  needs: ["generate-icons"]
+  before_script:
+    # Assumes MSYS2 is installed on the runner
+    - $env:PATH = "C:\msys64\mingw64\bin;C:\msys64\usr\bin;$env:PATH"
+  script:
+    - mkdir build
+    - cd build
+    - cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release ..
+    - mingw32-make -j4
+  artifacts:
+    paths:
+      - build/resistorcal.exe
+    expire_in: 1 week
+  allow_failure: true  # Windows runners may not be available
+
+# Alternative: Windows cross-compile from Linux
+build:windows-cross:
+  stage: build
+  image: ubuntu:22.04
+  needs: ["generate-icons"]
+  before_script:
+    - apt-get update -qq
+    - DEBIAN_FRONTEND=noninteractive apt-get install -y -qq
+        mingw-w64 cmake pkg-config wine64
+    # Note: Cross-compiling GTK3 for Windows is complex
+    # This job serves as a template - real cross-compile needs GTK3 Windows libs
+  script:
+    - echo "Windows cross-compilation requires pre-built GTK3 Windows libraries"
+    - echo "Consider using MSYS2 on a Windows runner or pre-built toolchain"
+  allow_failure: true
+
+# ============================================================================
+# macOS Build
+# ============================================================================
+
+build:macos:
+  stage: build
+  tags:
+    - macos
+  needs: ["generate-icons"]
+  before_script:
+    # Assumes Homebrew is available
+    - brew install gtk+3 pkg-config cmake || true
+  script:
+    - mkdir build && cd build
+    - cmake -DCMAKE_BUILD_TYPE=Release ..
+    - make -j$(sysctl -n hw.ncpu)
+  artifacts:
+    paths:
+      - build/resistorcal.app
+    expire_in: 1 week
+  allow_failure: true  # macOS runners may not be available
+
+# ============================================================================
+# Package Jobs
+# ============================================================================
+
+package:deb:
+  stage: package
+  image: ubuntu:22.04
+  needs: ["build:ubuntu-22.04", "generate-icons"]
+  before_script:
+    - apt-get update -qq
+    - DEBIAN_FRONTEND=noninteractive apt-get install -y -qq
+        build-essential cmake pkg-config libgtk-3-dev file
+  script:
+    - mkdir build && cd build
+    - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr ..
+    - make -j$(nproc)
+    - cpack -G DEB
+  artifacts:
+    paths:
+      - build/*.deb
+    expire_in: 1 month
+  only:
+    - tags
+    - main
+    - master
+
+package:rpm:
+  stage: package
+  image: fedora:latest
+  needs: ["build:fedora", "generate-icons"]
+  before_script:
+    - dnf install -y -q gcc cmake pkgconfig gtk3-devel make rpm-build
+  script:
+    - mkdir build && cd build
+    - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr ..
+    - make -j$(nproc)
+    - cpack -G RPM
+  artifacts:
+    paths:
+      - build/*.rpm
+    expire_in: 1 month
+  only:
+    - tags
+    - main
+    - master
+
+package:appimage:
+  stage: package
+  image: ubuntu:20.04
+  needs: ["build:ubuntu-20.04", "generate-icons"]
+  before_script:
+    - apt-get update -qq
+    - DEBIAN_FRONTEND=noninteractive apt-get install -y -qq
+        build-essential cmake pkg-config libgtk-3-dev
+        file fuse libfuse2 wget
+    - wget -q https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+    - wget -q https://github.com/linuxdeploy/linuxdeploy-plugin-gtk/releases/download/continuous/linuxdeploy-plugin-gtk-x86_64.sh
+    - chmod +x linuxdeploy-x86_64.AppImage linuxdeploy-plugin-gtk-x86_64.sh
+  script:
+    - mkdir build && cd build
+    - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr ..
+    - make -j$(nproc)
+    - make install DESTDIR=AppDir
+    - cd ..
+    - ./linuxdeploy-x86_64.AppImage --appdir build/AppDir
+        --plugin gtk
+        --output appimage
+        --icon-file data/icons/resistorcal.svg
+        --desktop-file data/resistorcal.desktop
+  artifacts:
+    paths:
+      - "*.AppImage"
+    expire_in: 1 month
+  allow_failure: true
+  only:
+    - tags
+    - main
+    - master
+
+package:windows-zip:
+  stage: package
+  tags:
+    - windows
+  needs: ["build:windows"]
+  script:
+    - cd build
+    - cpack -G ZIP
+  artifacts:
+    paths:
+      - build/*.zip
+    expire_in: 1 month
+  allow_failure: true
+  only:
+    - tags
+    - main
+    - master
+
+package:macos-dmg:
+  stage: package
+  tags:
+    - macos
+  needs: ["build:macos"]
+  before_script:
+    - brew install create-dmg || true
+  script:
+    - cd build
+    - cpack -G DragNDrop || create-dmg
+        --volname "Resistor Calculator"
+        --window-size 600 400
+        --icon-size 100
+        --app-drop-link 450 200
+        "ResistorCalculator-${CI_COMMIT_TAG:-dev}.dmg"
+        resistorcal.app
+  artifacts:
+    paths:
+      - build/*.dmg
+    expire_in: 1 month
+  allow_failure: true
+  only:
+    - tags
+    - main
+    - master

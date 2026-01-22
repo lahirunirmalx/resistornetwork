@@ -1,0 +1,62 @@
+# Build artifacts
+build/
+_build/
+cmake-build-*/
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+
+# Compiled objects
+*.o
+*.a
+*.so
+*.dylib
+
+# Executables
+resistorcal
+*.exe
+a.out
+
+# Editor cruft
+*~
+*.swp
+*.swo
+.*.swp
+\#*\#
+.#*
+
+# IDE
+.idea/
+.vscode/
+*.code-workspace
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Package artifacts
+*.deb
+*.rpm
+*.tar.gz
+_CPack_Packages/
+
+# Glade backup files
+*.glade~
+
+# Node.js / Capacitor
+node_modules/
+mobile/www/
+mobile/android/
+mobile/ios/
+*.log
+.npm
+
+# Generated icons (keep SVG source)
+web/icons/*.png
+data/icons/*.png
+data/icons/*.ico
+data/icons/*.icns

@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Resistor Calculator
+GenericName=Resistor Network Calculator
+Comment=Find resistor combinations for target resistance
+Exec=resistorcal
+Icon=resistorcal
+Terminal=false
+Categories=Utility;Electronics;Engineering;
+Keywords=resistor;electronics;ohm;circuit;
